@@ -9,10 +9,6 @@ class MyHoiaxDevice extends OAuth2Device {
    * onOAuth2Init is called when the device is initialized.
    */
    async onOAuth2Init() {
-    //await this.oAuth2Client.getThingState()
-    //  .then(async state => {
-    //    await this.setCapabilityValue('onoff', !!state.on);
-    //  });
       this.log('MyHoiaxDevice was initialized');
 
       let all_sym = Object.getOwnPropertySymbols(this)

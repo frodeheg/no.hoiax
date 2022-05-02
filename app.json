@@ -4,6 +4,9 @@
   "version": "1.0.0",
   "compatibility": ">=5.0.0",
   "sdk": 3,
+  "homeyCommunityTopicId": 63238,
+  "source": "https://github.com/frodeheg/no.hoiax.homey",
+  "homepage": "https://www.hoiax.no/",
   "brandColor": "#0B0B38",
   "platforms": [
     "local"
@@ -13,8 +16,8 @@
     "en": "Hoiax"
   },
   "description": {
-    "no": "Legger til støtte for Høiax smartberedere",
-    "en": "Adds support for Hoiax devices"
+    "no": "Smarte varmtvannsberedere",
+    "en": "Smart Water Heaters"
   },
   "category": [
     "appliances"

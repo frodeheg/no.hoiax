@@ -1,0 +1,34 @@
+{
+  "id": "no.hoiax.homey",
+  "version": "1.0.0",
+  "compatibility": ">=5.0.0",
+  "sdk": 3,
+  "homeyCommunityTopicId": 63238,
+  "source": "https://github.com/frodeheg/no.hoiax.homey",
+  "homepage": "https://www.hoiax.no/",
+  "brandColor": "#0B0B38",
+  "platforms": [
+    "local"
+  ],
+  "name": {
+    "no": "Høiax",
+    "en": "Hoiax"
+  },
+  "description": {
+    "no": "Smarte varmtvannsberedere",
+    "en": "Smart Water Heaters"
+  },
+  "category": [
+    "appliances"
+  ],
+  "permissions": [],
+  "images": {
+    "small": "/assets/images/small.png",
+    "large": "/assets/images/large.png",
+    "xlarge": "/assets/images/xlarge.png"
+  },
+  "author": {
+    "name": "Frode Heggelund",
+    "email": "frode.heggelund@gmail.com"
+  }
+}

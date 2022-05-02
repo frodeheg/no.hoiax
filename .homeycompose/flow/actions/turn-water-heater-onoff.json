@@ -1,0 +1,34 @@
+{
+  "title": {
+    "en": "Turn Water Heater on/off",
+    "no": "Slå varmtvannstank av/på"
+  },
+  "titleFormatted": {
+    "en": "Turn upper element [[upper]] and lower element [[lower]]",
+    "no": "Slå øvre element [[upper]] og nedre element [[lower]]"
+  },
+  "hint": {
+    "en": "Turns any of the heating elements on or off",
+    "no": "Slå av og på elementene i varmtvannstanken"
+  },
+  "args": [
+    {
+      "type": "dropdown",
+      "title": { "en": "Upper heating element (700W)", "no": "Øvre varmeelement (700W)" },
+      "values": [
+        { "id": "true",  "label": { "en": "On",  "no": "På" } },
+        { "id": "false", "label": { "en": "Off", "no": "Av" } }
+      ],
+      "name": "upper"
+    },
+    {
+      "type": "dropdown",
+      "title": { "en": "Lower heating element (1300W)", "no": "Nedre varmeelement (1300W)" },
+      "values": [
+        { "id": "true",  "label": { "en": "On",  "no": "På" } },
+        { "id": "false", "label": { "en": "Off", "no": "Av" } }
+      ],
+      "name": "lower"
+    }
+  ]
+}

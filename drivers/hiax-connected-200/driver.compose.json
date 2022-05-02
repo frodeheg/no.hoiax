@@ -1,19 +1,61 @@
 {
   "name": {
-    "en": "Høiax Connected 200"
+    "en": "Hoiax Connected 200/300",
+    "no": "Høiax Connected 200/300"
   },
   "class": "heater",
   "capabilities": [
-    "meter_power",
+    "meter_power.accumulated",
+    "meter_power.in_tank",
+    "measure_power",
     "target_temperature",
     "measure_temperature",
-    "onoff"
+    "onoff.upper",
+    "onoff.lower",
+    "measure_humidity.fill_level",
+    "measure_humidity.efficiency"
   ],
   "capabilitiesOptions": {
+    "meter_power.accumulated": {
+      "title": {
+        "en": "Total usage",
+        "no": "Totalt forbruk"
+      }
+    },
+    "meter_power.in_tank": {
+      "title": {
+        "en": "Energy in tank",
+        "no": "I tanken"
+      }
+    },
     "target_temperature": {
       "step": 0.5,
       "min": 20,
       "max": 85
+    },
+    "onoff.upper": {
+      "title": {
+        "en": "Upper element 700W",
+        "no": "Øvre element 700W"
+      }
+    },
+    "onoff.lower": {
+      "title": {
+        "en": "Lower element 1300W",
+        "no": "Nedre element 1300W"
+      }
+    },
+    "measure_humidity.fill_level": {
+      "title": {
+        "en": "Fill level",
+        "no": "Fyllingsgrad"
+      }
+    },
+    "measure_humidity.efficiency": {
+      "title": {
+        "en": "Efficiency",
+        "no": "Effektivitet"
+      }
     }
   },
   "platforms": [

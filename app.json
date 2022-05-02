@@ -32,23 +32,167 @@
     "name": "Frode Heggelund",
     "email": "frode.heggelund@gmail.com"
   },
+  "flow": {
+    "triggers": [
+      {
+        "title": {
+          "en": "The water heater turned on/off"
+        },
+        "hint": {
+          "en": "Any of the heating elements was put into on/off state"
+        },
+        "tokens": [
+          {
+            "type": "boolean",
+            "name": "upper-on",
+            "title": {
+              "en": "upper-on"
+            },
+            "example": {
+              "en": "True when the upper heating element is on"
+            }
+          },
+          {
+            "type": "boolean",
+            "name": "lower-on",
+            "title": {
+              "en": "lower-on"
+            },
+            "example": {
+              "en": "True when the lower heating element is on"
+            }
+          }
+        ],
+        "id": "the-water-heater-turned-onoff"
+      }
+    ],
+    "actions": [
+      {
+        "title": {
+          "en": "Turn Water Heater on/off",
+          "no": "Slå varmtvannstank av/på"
+        },
+        "titleFormatted": {
+          "en": "Turn upper element [[upper]] and lower element [[lower]]",
+          "no": "Slå øvre element [[upper]] og nedre element [[lower]]"
+        },
+        "hint": {
+          "en": "Turns any of the heating elements on or off",
+          "no": "Slå av og på elementene i varmtvannstanken"
+        },
+        "args": [
+          {
+            "type": "dropdown",
+            "title": {
+              "en": "Upper heating element (700W)",
+              "no": "Øvre varmeelement (700W)"
+            },
+            "values": [
+              {
+                "id": "true",
+                "label": {
+                  "en": "On",
+                  "no": "På"
+                }
+              },
+              {
+                "id": "false",
+                "label": {
+                  "en": "Off",
+                  "no": "Av"
+                }
+              }
+            ],
+            "name": "upper"
+          },
+          {
+            "type": "dropdown",
+            "title": {
+              "en": "Lower heating element (1300W)",
+              "no": "Nedre varmeelement (1300W)"
+            },
+            "values": [
+              {
+                "id": "true",
+                "label": {
+                  "en": "On",
+                  "no": "På"
+                }
+              },
+              {
+                "id": "false",
+                "label": {
+                  "en": "Off",
+                  "no": "Av"
+                }
+              }
+            ],
+            "name": "lower"
+          }
+        ],
+        "id": "turn-water-heater-onoff"
+      }
+    ]
+  },
   "drivers": [
     {
       "name": {
-        "en": "Høiax Connected 200"
+        "en": "Hoiax Connected 200/300",
+        "no": "Høiax Connected 200/300"
       },
       "class": "heater",
       "capabilities": [
-        "meter_power",
+        "meter_power.accumulated",
+        "meter_power.in_tank",
+        "measure_power",
         "target_temperature",
         "measure_temperature",
-        "onoff"
+        "onoff.upper",
+        "onoff.lower",
+        "measure_humidity.fill_level",
+        "measure_humidity.efficiency"
       ],
       "capabilitiesOptions": {
+        "meter_power.accumulated": {
+          "title": {
+            "en": "Total usage",
+            "no": "Totalt forbruk"
+          }
+        },
+        "meter_power.in_tank": {
+          "title": {
+            "en": "Energy in tank",
+            "no": "I tanken"
+          }
+        },
         "target_temperature": {
           "step": 0.5,
           "min": 20,
           "max": 85
+        },
+        "onoff.upper": {
+          "title": {
+            "en": "Upper element 700W",
+            "no": "Øvre element 700W"
+          }
+        },
+        "onoff.lower": {
+          "title": {
+            "en": "Lower element 1300W",
+            "no": "Nedre element 1300W"
+          }
+        },
+        "measure_humidity.fill_level": {
+          "title": {
+            "en": "Fill level",
+            "no": "Fyllingsgrad"
+          }
+        },
+        "measure_humidity.efficiency": {
+          "title": {
+            "en": "Efficiency",
+            "no": "Effektivitet"
+          }
         }
       },
       "platforms": [

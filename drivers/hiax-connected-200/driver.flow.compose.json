@@ -1,0 +1,78 @@
+{
+  "triggers": [
+    {
+        "id": "the-water-heater-turned-onoff",
+        "highlight": true,
+        "title": {
+          "en": "The water heater turned on/off",
+          "no": "Varmtvannstanken slo seg av/på"
+        },
+        "hint": {
+          "en": "Any of the heating elements was put into on/off state",
+          "no": "Et eller flere av varmeelementene i tanken slo seg av eller på"
+        },
+        "tokens": [
+          {
+            "type": "boolean",
+            "name": "upper-on",
+            "title": {
+              "en": "upper-on"
+            },
+            "example": {
+              "en": "True when the upper heating element is on",
+              "no": "Sann når øvre varmeelement er slått på"
+            }
+          },
+          {
+            "type": "boolean",
+            "name": "lower-on",
+            "title": {
+              "en": "lower-on"
+            },
+            "example": {
+              "en": "True when the lower heating element is on",
+              "no": "Sann når nedre varmeelement er slått på"
+            }
+          }
+        ]
+      }
+  ],
+  "actions": [
+    {
+        "id": "turn-water-heater-onoff",
+        "highlight": true,
+        "title": {
+            "en": "Turn Water Heater on/off",
+            "no": "Slå varmtvannstank av/på"
+        },
+        "titleFormatted": {
+            "en": "Turn upper element [[upper]] and lower element [[lower]]",
+            "no": "Slå øvre element [[upper]] og nedre element [[lower]]"
+        },
+        "hint": {
+            "en": "Turns any of the heating elements on or off",
+            "no": "Slå av og på elementene i varmtvannstanken"
+        },
+        "args": [
+            {
+            "type": "dropdown",
+            "title": { "en": "Upper heating element (700W)", "no": "Øvre varmeelement (700W)" },
+            "values": [
+                { "id": "true",  "label": { "en": "On",  "no": "På" } },
+                { "id": "false", "label": { "en": "Off", "no": "Av" } }
+            ],
+            "name": "upper"
+            },
+            {
+            "type": "dropdown",
+            "title": { "en": "Lower heating element (1300W)", "no": "Nedre varmeelement (1300W)" },
+            "values": [
+                { "id": "true",  "label": { "en": "On",  "no": "På" } },
+                { "id": "false", "label": { "en": "Off", "no": "Av" } }
+            ],
+            "name": "lower"
+            }
+        ]
+    }
+  ]
+}

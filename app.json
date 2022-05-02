@@ -35,11 +35,15 @@
   "flow": {
     "triggers": [
       {
+        "id": "the-water-heater-turned-onoff",
+        "highlight": true,
         "title": {
-          "en": "The water heater turned on/off"
+          "en": "The water heater turned on/off",
+          "no": "Varmtvannstanken slo seg av/på"
         },
         "hint": {
-          "en": "Any of the heating elements was put into on/off state"
+          "en": "Any of the heating elements was put into on/off state",
+          "no": "Et eller flere av varmeelementene i tanken slo seg av eller på"
         },
         "tokens": [
           {
@@ -49,7 +53,8 @@
               "en": "upper-on"
             },
             "example": {
-              "en": "True when the upper heating element is on"
+              "en": "True when the upper heating element is on",
+              "no": "Sann når øvre varmeelement er slått på"
             }
           },
           {
@@ -59,15 +64,24 @@
               "en": "lower-on"
             },
             "example": {
-              "en": "True when the lower heating element is on"
+              "en": "True when the lower heating element is on",
+              "no": "Sann når nedre varmeelement er slått på"
             }
           }
         ],
-        "id": "the-water-heater-turned-onoff"
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=hiax-connected-200"
+          }
+        ]
       }
     ],
     "actions": [
       {
+        "id": "turn-water-heater-onoff",
+        "highlight": true,
         "title": {
           "en": "Turn Water Heater on/off",
           "no": "Slå varmtvannstank av/på"
@@ -81,6 +95,11 @@
           "no": "Slå av og på elementene i varmtvannstanken"
         },
         "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=hiax-connected-200"
+          },
           {
             "type": "dropdown",
             "title": {
@@ -129,8 +148,7 @@
             ],
             "name": "lower"
           }
-        ],
-        "id": "turn-water-heater-onoff"
+        ]
       }
     ]
   },

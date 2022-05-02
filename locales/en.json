@@ -1,1 +1,6 @@
-{}
+{
+  "settings": {
+    "title": "My Settings Page",
+    "subtitle": "Please log in"
+  }
+}

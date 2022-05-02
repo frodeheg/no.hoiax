@@ -1,14 +1,15 @@
 'use strict';
 
-const { Driver } = require('homey');
+const { OAuth2Driver } = require('homey-oauth2app');
 
-class MyDriver extends Driver {
+class HoiaxDriver extends OAuth2Driver {
 
   /**
    * onInit is called when the driver is initialized.
    */
-  async onInit() {
-    this.log('MyDriver has been initialized');
+  async onOAuth2Init() {
+    // Register Flow Cards etc.
+    this.log('HoiaxOAuth2Driver has been initialized');
   }
 
   /**
@@ -16,21 +17,36 @@ class MyDriver extends Driver {
    * and the 'list_devices' view is called.
    * This should return an array with the data of devices that are available for pairing.
    */
-  async onPairListDevices() {
-    return [
-      // Example device data, note that `store` is optional
-      // {
-      //   name: 'My Device',
-      //   data: {
-      //     id: 'my-device',
-      //   },
-      //   store: {
-      //     address: '127.0.0.1',
-      //   },
-      // },
-    ];
+  async onPairListDevices({ oAuth2Client }) {
+    let devicelist = []
+    // Fetch only the first page as nobody will ever control more than 10 water tanks with Homey
+    const things = await oAuth2Client.getDevices({ page: 1 });
+
+    if (things.numItems == 0) {
+      throw new Error('No devices was found');
+    }
+
+    // NOTE: This code has Never been tested with more than 1 device but should support more
+    for (let item_nr = 0; item_nr < things.numItems; item_nr++) {
+      const system = things.systems[item_nr]
+      for (let device_nr = 0; device_nr < system.devices.length; device_nr++) {
+        const device = system.devices[device_nr]
+        let mydevice = {
+          name: undefined, // Replaced by product name
+          data: {
+            systemId:     system.systemId,
+            systemName:   system.name,
+            deviceId:     device.id,
+            deviceSerial: device.product.serialNumber,
+            deviceName:   device.product.name
+          }
+        }
+        devicelist.push(mydevice)
+      }
+    }
+    return devicelist
   }
 
 }
 
-module.exports = MyDriver;
+module.exports = HoiaxDriver;

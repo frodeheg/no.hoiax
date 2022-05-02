@@ -8,10 +8,12 @@
     "local"
   ],
   "name": {
-    "en": "Høiax"
+    "no": "Høiax",
+    "en": "Hoiax"
   },
   "description": {
-    "en": "Adds support for Høiax devices"
+    "no": "Legger til støtte for Høiax smartberedere",
+    "en": "Adds support for Hoiax devices"
   },
   "category": [
     "appliances"
@@ -34,10 +36,17 @@
       "class": "heater",
       "capabilities": [
         "meter_power",
+        "target_temperature",
         "measure_temperature",
-        "thermostat_mode",
         "onoff"
       ],
+      "capabilitiesOptions": {
+        "target_temperature": {
+          "step": 0.5,
+          "min": 20,
+          "max": 85
+        }
+      },
       "platforms": [
         "local"
       ],
@@ -51,6 +60,10 @@
       },
       "pair": [
         {
+          "id": "login_oauth2",
+          "template": "login_oauth2"
+        },
+        {
           "id": "list_devices",
           "template": "list_devices",
           "navigation": {
@@ -60,6 +73,12 @@
         {
           "id": "add_devices",
           "template": "add_devices"
+        }
+      ],
+      "repair": [
+        {
+          "id": "login_oauth2",
+          "template": "login_oauth2"
         }
       ],
       "id": "hiax-connected-200"

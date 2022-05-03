@@ -1,7 +1,7 @@
 {
   "name": {
-    "en": "Hoiax Connected 200/300",
-    "no": "Høiax Connected 200/300"
+    "en": "Hoiax CONNECTED",
+    "no": "Høiax CONNECTED"
   },
   "class": "heater",
   "capabilities": [

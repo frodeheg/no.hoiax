@@ -4,8 +4,8 @@
         "id": "the-water-heater-turned-onoff",
         "highlight": true,
         "title": {
-          "en": "The water heater turned on/off",
-          "no": "Varmtvannstanken slo seg av/på"
+          "en": "Turned partially on/off",
+          "no": "Slått delvis av/på"
         },
         "hint": {
           "en": "Any of the heating elements was put into on/off state",
@@ -16,7 +16,8 @@
             "type": "boolean",
             "name": "upper-on",
             "title": {
-              "en": "upper-on"
+              "en": "Upper element",
+              "no": "Øvre element"
             },
             "example": {
               "en": "True when the upper heating element is on",
@@ -27,7 +28,8 @@
             "type": "boolean",
             "name": "lower-on",
             "title": {
-              "en": "lower-on"
+              "en": "Lower element",
+              "no": "Nedre element"
             },
             "example": {
               "en": "True when the lower heating element is on",
@@ -42,8 +44,8 @@
         "id": "turn-water-heater-onoff",
         "highlight": true,
         "title": {
-            "en": "Turn Water Heater on/off",
-            "no": "Slå varmtvannstank av/på"
+            "en": "Turn partially on/off",
+            "no": "Slå delvis av/på"
         },
         "titleFormatted": {
             "en": "Turn upper element [[upper]] and lower element [[lower]]",

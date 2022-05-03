@@ -27,6 +27,13 @@
     "large": "/assets/images/large.png",
     "xlarge": "/assets/images/xlarge.png"
   },
+  "contributing": {
+    "donate": {
+      "githubSponsors": {
+        "username": "frodeheg"
+      }
+    }
+  },
   "author": {
     "name": "Frode Heggelund",
     "email": "frode.heggelund@gmail.com"

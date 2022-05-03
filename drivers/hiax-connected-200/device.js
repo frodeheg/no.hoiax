@@ -5,15 +5,41 @@ const { OAuth2Device } = require('homey-oauth2app');
 
 class MyHoiaxDevice extends OAuth2Device {
 
-  async setHeaterState(deviceId) {
-    // Value 0 = Off, 1 = 700W, 2 = 1300W, 3 = 2000W
+  async setHeaterState(deviceId, new_upper, new_lower) {
+    let stateChanged = false
+    // 1) Set internal state
+    if (new_upper != undefined && new_upper != this.upperState) {
+      this.upperState = new_upper
+      stateChanged = true
+    }
+    if (new_lower != undefined && new_lower != this.lowerState) {
+      this.lowerState = new_lower
+      stateChanged = true
+    }
+    // 2) Send commands to device
+    //    Value 0 = Off, 1 = 700W, 2 = 1300W, 3 = 2000W
     let power = (this.upperState ? 1 : 0) + (this.lowerState ? 2 : 0)
     const onoff_response = await this.oAuth2Client.setDevicePoint(deviceId, { '517': power });
     if (onoff_response.ok === false) {
       throw new Error('Unable to Control device - Failed to power on/off');
     }
-    this.log('Turned On/Off:', power)
+    // 3) Set capability states
+    this.setCapabilityValue('onoff.upper', this.upperState).catch(this.error)
+    this.setCapabilityValue('onoff.lower', this.lowerState).catch(this.error)
+    this.setCapabilityValue('onoff', this.upperState || this.lowerState).catch(this.error)
+
+    // 4) Send trigger action
+    if (stateChanged) {
+      const tokens = {
+        'upper-on': this.upperState,
+        'lower-on': this.lowerState
+      };
+      this.driver.ready().then(() => {
+        this.driver.triggerOnOffFlow(this, tokens, {})
+      })
+    }
   }
+
 
   /**
    * onOAuth2Init is called when the device is initialized.
@@ -46,34 +72,38 @@ class MyHoiaxDevice extends OAuth2Device {
         }
       }
 
-      // Check if the device Status and update internal state every now and then:
+      // Update internal state every 5 minute:
       await this.updateState(deviceId)
       setInterval(() => {
         this.updateState(deviceId)
-      }, 1000*60*5) // Every 5 minute
+      }, 1000*60*5)
       
-
-      const OnOffTrigger = this.homey.flow.getTriggerCard('the-water-heater-turned-onoff')
+      // Custom flows
       const OnOffAction  = this.homey.flow.getActionCard('turn-water-heater-onoff')
 
       OnOffAction.registerRunListener(async (state) => {
-        this.upperState = (state['upper'] == "true")
-        this.lowerState = (state['lower'] == "true")
-        await this.setHeaterState(deviceId)
+        await this.setHeaterState(
+          deviceId,
+          state['upper'] == "true",
+          state['lower'] == "true")
       })
 
       // Register on/off handling
-      this.registerMultipleCapabilityListener(['onoff.upper', 'onoff.lower'], async (value) => {
-        if (value['onoff.upper'] != undefined) { this.upperState = value['onoff.upper'] }
-        if (value['onoff.lower'] != undefined) { this.lowerState = value['onoff.lower'] }
-        const tokens = {
-          'upper-on': this.upperState,
-          'lower-on': this.lowerState
-        };
-        OnOffTrigger.trigger(tokens)
-          .catch(this.error);
-          await this.setHeaterState(deviceId)
+      let new_upper = undefined
+      let new_lower = undefined
+      this.registerMultipleCapabilityListener(['onoff', 'onoff.upper', 'onoff.lower'], async (value) => {
+        if (value['onoff.upper'] != undefined) {
+          new_upper = value['onoff.upper']
+        } else if (value['onoff.lower'] != undefined) {
+          new_lower = value['onoff.lower']
+        } else if (value['onoff'] != undefined) {
+          new_upper = value['onoff']
+          new_lower = value['onoff']
+        }
+        await this.setHeaterState(deviceId, new_upper, new_lower)
       })
+      //  Device.onInit Error: Error: Invalid Flow Card ID: the-water-heater-turned-onoff2
+      //                Error: invalid_flow_card_id at Remote Process
 
       // Register target temperature handling
       this.registerCapabilityListener('target_temperature', async (value) => {
@@ -96,6 +126,7 @@ class MyHoiaxDevice extends OAuth2Device {
     this.lowerState = (dev_points[5].value & 2) == 2 // 517 = Requested power
     this.setCapabilityValue('onoff.upper', this.upperState).catch(this.error)
     this.setCapabilityValue('onoff.lower', this.lowerState).catch(this.error)
+    this.setCapabilityValue('onoff', this.upperState || this.lowerState).catch(this.error)
     this.setCapabilityValue('target_temperature', dev_points[6].value) // 527 = Requested temperature
     this.setCapabilityValue('measure_temperature', dev_points[7].value) // 528 = Measured temperature
   }

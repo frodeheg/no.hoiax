@@ -1,5 +1,8 @@
 {
   "1.0.0": {
     "en": "Support for Hoiax devices"
+  },
+  "1.0.1": {
+    "en": "Removed the tank volume in the name of the water heater as a heater with greater capacity is going to be released later"
   }
 }

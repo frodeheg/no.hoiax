@@ -4,5 +4,8 @@
   },
   "1.0.1": {
     "en": "Removed the tank volume in the name of the water heater as a heater with greater capacity is going to be released later"
+  },
+  "1.1.0": {
+    "en": "Fixed compliancy issues and simplified the maximum power control"
   }
 }

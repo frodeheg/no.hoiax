@@ -7,5 +7,8 @@
   },
   "1.1.0": {
     "en": "Fixed compliancy issues and simplified the maximum power control"
+  },
+  "1.1.1": {
+    "en": "Compliancy fixes"
   }
 }

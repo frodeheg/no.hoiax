@@ -5,39 +5,30 @@ const { OAuth2Device } = require('homey-oauth2app');
 
 class MyHoiaxDevice extends OAuth2Device {
 
-  async setHeaterState(deviceId, new_upper, new_lower) {
-    let stateChanged = false
-    // 1) Set internal state
-    if (new_upper != undefined && new_upper != this.upperState) {
-      this.upperState = new_upper
-      stateChanged = true
-    }
-    if (new_lower != undefined && new_lower != this.lowerState) {
-      this.lowerState = new_lower
-      stateChanged = true
-    }
-    // 2) Send commands to device
+  async setHeaterState(deviceId, turn_on, new_power) {
+    // 1) Send commands to device
     //    Value 0 = Off, 1 = 700W, 2 = 1300W, 3 = 2000W
-    let power = (this.upperState ? 1 : 0) + (this.lowerState ? 2 : 0)
+    let power = turn_on ? new_power : 0
     const onoff_response = await this.oAuth2Client.setDevicePoint(deviceId, { '517': power });
     if (onoff_response.ok === false) {
       throw new Error('Unable to Control device - Failed to power on/off');
     }
-    // 3) Set capability states
-    this.setCapabilityValue('onoff.upper', this.upperState).catch(this.error)
-    this.setCapabilityValue('onoff.lower', this.lowerState).catch(this.error)
-    this.setCapabilityValue('onoff', this.upperState || this.lowerState).catch(this.error)
+    // 2) Set capability states
+    let new_power_text = (new_power == 1) ? "low_power" : (new_power == 2) ? "medium_power" : "high_power"
+    let new_power_watt = (new_power == 1) ?         700 : (new_power == 2) ? 1300           : 2000
+    this.setCapabilityValue('onoff', turn_on).catch(this.error)
+    this.setCapabilityValue('max_power', new_power_text).catch(this.error)
 
-    // 4) Send trigger action
-    if (stateChanged) {
-      const tokens = {
-        'upper-on': this.upperState,
-        'lower-on': this.lowerState
-      };
+    // 3) Send trigger action
+    if (new_power != this.max_power) {
+      const tokens = { 'max_power': new_power_watt };
       this.driver.ready().then(() => {
-        this.driver.triggerOnOffFlow(this, tokens, {})
+        this.driver.triggerMaxPowerChanged(this, tokens, {})
       })
     }
+    // 4) Set internal state
+    this.is_on = turn_on
+    this.max_power = new_power
   }
 
 
@@ -72,6 +63,10 @@ class MyHoiaxDevice extends OAuth2Device {
         }
       }
 
+      // Set heater max power to 2000 W
+      this.max_power = 3
+      this.is_on = true
+
       // Update internal state every 5 minute:
       await this.updateState(deviceId)
       setInterval(() => {
@@ -79,31 +74,30 @@ class MyHoiaxDevice extends OAuth2Device {
       }, 1000*60*5)
       
       // Custom flows
-      const OnOffAction  = this.homey.flow.getActionCard('turn-water-heater-onoff')
+      const OnMaxPowerAction  = this.homey.flow.getActionCard('change-maxpower')
 
-      OnOffAction.registerRunListener(async (state) => {
+      OnMaxPowerAction.registerRunListener(async (state) => {
         await this.setHeaterState(
           deviceId,
-          state['upper'] == "true",
-          state['lower'] == "true")
+          this.is_on,
+          (state['max_power'] == "low_power") ? 1 :
+          (state['max_power'] == "medium_power") ? 2 : 3 )
       })
 
       // Register on/off handling
-      let new_upper = undefined
-      let new_lower = undefined
-      this.registerMultipleCapabilityListener(['onoff', 'onoff.upper', 'onoff.lower'], async (value) => {
-        if (value['onoff.upper'] != undefined) {
-          new_upper = value['onoff.upper']
-        } else if (value['onoff.lower'] != undefined) {
-          new_lower = value['onoff.lower']
-        } else if (value['onoff'] != undefined) {
-          new_upper = value['onoff']
-          new_lower = value['onoff']
-        }
-        await this.setHeaterState(deviceId, new_upper, new_lower)
+      this.registerCapabilityListener('onoff', async (turn_on) => {
+        await this.setHeaterState(deviceId, turn_on, this.max_power)
       })
-      //  Device.onInit Error: Error: Invalid Flow Card ID: the-water-heater-turned-onoff2
-      //                Error: invalid_flow_card_id at Remote Process
+      // Register max power handling
+      this.registerCapabilityListener('max_power', async (value) => {
+        let new_power = 3 // High power
+        if (value == 'low_power') {
+          new_power = 1
+        } else if (value == 'medium_power') {
+          new_power = 2
+        }
+        await this.setHeaterState(deviceId, this.is_on, new_power)
+      })
 
       // Register target temperature handling
       this.registerCapabilityListener('target_temperature', async (value) => {
@@ -116,19 +110,24 @@ class MyHoiaxDevice extends OAuth2Device {
     }
 
   async updateState(deviceId) {
-    const dev_points = await this.oAuth2Client.getDevicePoints(deviceId, '302,303,400,404,405,517,527,528');
+    const dev_points = await this.oAuth2Client.getDevicePoints(deviceId, '302,303,400,404,517,527,528');
     this.setCapabilityValue('meter_power.in_tank', dev_points[0].value) // 302 = EnergyStored
     this.setCapabilityValue('meter_power.accumulated', dev_points[1].value) // 303 = EnergyTotal
     this.setCapabilityValue('measure_power', dev_points[2].value) // 400 = EstimatedPower
     this.setCapabilityValue('measure_humidity.fill_level', dev_points[3].value) //404 = FillLevel
-    this.setCapabilityValue('measure_humidity.efficiency', dev_points[4].value) //405 = HeaterEfficiency
-    this.upperState = (dev_points[5].value & 1) == 1 // 517 = Requested power
-    this.lowerState = (dev_points[5].value & 2) == 2 // 517 = Requested power
-    this.setCapabilityValue('onoff.upper', this.upperState).catch(this.error)
-    this.setCapabilityValue('onoff.lower', this.lowerState).catch(this.error)
-    this.setCapabilityValue('onoff', this.upperState || this.lowerState).catch(this.error)
-    this.setCapabilityValue('target_temperature', dev_points[6].value) // 527 = Requested temperature
-    this.setCapabilityValue('measure_temperature', dev_points[7].value) // 528 = Measured temperature
+    //this.setCapabilityValue('measure_humidity.efficiency', dev_points[4].value) //405 = HeaterEfficiency
+    let current_max_power = dev_points[4].value // 517 = Requested power
+    // Value 0 = Off, 1 = 700W, 2 = 1300W, 3 = 2000W
+    if (current_max_power == 0) {
+      // Heater is off
+      this.is_on     = false
+    } else {
+      this.is_on     = true
+      this.max_power = current_max_power
+    }
+    this.setHeaterState(deviceId, this.is_on, this.max_power)
+    this.setCapabilityValue('target_temperature', dev_points[5].value) // 527 = Requested temperature
+    this.setCapabilityValue('measure_temperature', dev_points[6].value) // 528 = Measured temperature
   }
 
   async onOAuth2Deleted() {

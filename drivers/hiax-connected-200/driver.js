@@ -9,15 +9,15 @@ class HoiaxDriver extends OAuth2Driver {
    */
   async onOAuth2Init() {
     // Register Flow Cards etc.
-    this._OnOffTrigger = this.homey.flow.getDeviceTriggerCard('the-water-heater-turned-onoff')
+    this._maxPowerChangedTrigger = this.homey.flow.getDeviceTriggerCard('maxpower-changed')
     this.log('HoiaxOAuth2Driver has been initialized');
   }
 
   /**
    * triggerOnOffFlow triggers the flow to turn on/off the water heater partially
    */
-   triggerOnOffFlow(device, tokens, state) {
-    this._OnOffTrigger
+   triggerMaxPowerChanged(device, tokens, state) {
+    this._maxPowerChangedTrigger
     .trigger(device, tokens, state)
     .catch(this.error);
   }

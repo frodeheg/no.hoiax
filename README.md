@@ -1,5 +1,5 @@
 # Høiax
-https://homey.app/no-no/app/no.hoiax.homey/Hoiax/
+https://homey.app/no-no/app/no.hoiax/Hoiax/
 
 Homey app for Høiax devices
 

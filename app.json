@@ -42,39 +42,27 @@
   "flow": {
     "triggers": [
       {
-        "id": "the-water-heater-turned-onoff",
+        "id": "maxpower-changed",
         "highlight": true,
         "title": {
-          "en": "Turned partially on/off",
-          "no": "Slått delvis av/på"
+          "en": "Max power changed",
+          "no": "Maks effekt endret seg"
         },
         "hint": {
-          "en": "Any of the heating elements was put into on/off state",
-          "no": "Et eller flere av varmeelementene i tanken slo seg av eller på"
+          "en": "The maximum allowed power changed",
+          "no": "Den maksimalt tillatte effekten endret seg"
         },
         "tokens": [
           {
-            "type": "boolean",
-            "name": "upper-on",
+            "type": "number",
+            "name": "max_power",
             "title": {
-              "en": "Upper element",
-              "no": "Øvre element"
+              "en": "Max power in Watts",
+              "no": "Maks effekt i Watt"
             },
             "example": {
-              "en": "True when the upper heating element is on",
-              "no": "Sann når øvre varmeelement er slått på"
-            }
-          },
-          {
-            "type": "boolean",
-            "name": "lower-on",
-            "title": {
-              "en": "Lower element",
-              "no": "Nedre element"
-            },
-            "example": {
-              "en": "True when the lower heating element is on",
-              "no": "Sann når nedre varmeelement er slått på"
+              "en": "W",
+              "no": "W"
             }
           }
         ],
@@ -89,19 +77,19 @@
     ],
     "actions": [
       {
-        "id": "turn-water-heater-onoff",
+        "id": "change-maxpower",
         "highlight": true,
         "title": {
-          "en": "Turn partially on/off",
-          "no": "Slå delvis av/på"
+          "en": "Change maximum power",
+          "no": "Endre maks effekt"
         },
         "titleFormatted": {
-          "en": "Turn upper element [[upper]] and lower element [[lower]]",
-          "no": "Slå øvre element [[upper]] og nedre element [[lower]]"
+          "en": "Change max power to [[max_power]]",
+          "no": "Endre maks effekt til [[max_power]]"
         },
         "hint": {
-          "en": "Turns any of the heating elements on or off",
-          "no": "Slå av og på elementene i varmtvannstanken"
+          "en": "Changes the maximum power of the water heater",
+          "no": "Endrer maks effekt for varmtvannstanken"
         },
         "args": [
           {
@@ -112,50 +100,33 @@
           {
             "type": "dropdown",
             "title": {
-              "en": "Upper heating element (700W)",
-              "no": "Øvre varmeelement (700W)"
+              "en": "Max power",
+              "no": "Maks effekt"
             },
             "values": [
               {
-                "id": "true",
+                "id": "low_power",
                 "label": {
-                  "en": "On",
-                  "no": "På"
+                  "en": "700 W",
+                  "no": "700 W"
                 }
               },
               {
-                "id": "false",
+                "id": "medium_power",
                 "label": {
-                  "en": "Off",
-                  "no": "Av"
-                }
-              }
-            ],
-            "name": "upper"
-          },
-          {
-            "type": "dropdown",
-            "title": {
-              "en": "Lower heating element (1300W)",
-              "no": "Nedre varmeelement (1300W)"
-            },
-            "values": [
-              {
-                "id": "true",
-                "label": {
-                  "en": "On",
-                  "no": "På"
+                  "en": "1300 W",
+                  "no": "1300 W"
                 }
               },
               {
-                "id": "false",
+                "id": "high_power",
                 "label": {
-                  "en": "Off",
-                  "no": "Av"
+                  "en": "2000 W",
+                  "no": "2000 W"
                 }
               }
             ],
-            "name": "lower"
+            "name": "max_power"
           }
         ]
       }
@@ -169,16 +140,14 @@
       },
       "class": "heater",
       "capabilities": [
+        "max_power",
         "meter_power.accumulated",
         "meter_power.in_tank",
         "measure_power",
         "target_temperature",
         "measure_temperature",
         "onoff",
-        "onoff.upper",
-        "onoff.lower",
-        "measure_humidity.fill_level",
-        "measure_humidity.efficiency"
+        "measure_humidity.fill_level"
       ],
       "capabilitiesOptions": {
         "meter_power.accumulated": {
@@ -198,34 +167,10 @@
           "min": 20,
           "max": 85
         },
-        "onoff": {
-          "title": {
-            "en": "Both elements 2000W",
-            "no": "Begge element 2000W"
-          }
-        },
-        "onoff.upper": {
-          "title": {
-            "en": "Upper element 700W",
-            "no": "Øvre element 700W"
-          }
-        },
-        "onoff.lower": {
-          "title": {
-            "en": "Lower element 1300W",
-            "no": "Nedre element 1300W"
-          }
-        },
         "measure_humidity.fill_level": {
           "title": {
             "en": "Fill level",
             "no": "Fyllingsgrad"
-          }
-        },
-        "measure_humidity.efficiency": {
-          "title": {
-            "en": "Efficiency",
-            "no": "Effektivitet"
           }
         }
       },
@@ -265,5 +210,38 @@
       ],
       "id": "hiax-connected-200"
     }
-  ]
+  ],
+  "capabilities": {
+    "max_power": {
+      "type": "enum",
+      "title": {
+        "en": "Max power",
+        "no": "Max effekt"
+      },
+      "getable": true,
+      "setable": true,
+      "values": [
+        {
+          "id": "low_power",
+          "title": {
+            "en": "Low power - 700 W"
+          }
+        },
+        {
+          "id": "medium_power",
+          "title": {
+            "en": "Medium power - 1300 W"
+          }
+        },
+        {
+          "id": "high_power",
+          "title": {
+            "en": "Max power - 2000 W"
+          }
+        }
+      ],
+      "uiComponent": "picker",
+      "uiQuickAction": true
+    }
+  }
 }

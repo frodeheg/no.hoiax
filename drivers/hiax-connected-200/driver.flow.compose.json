@@ -1,39 +1,27 @@
 {
   "triggers": [
     {
-        "id": "the-water-heater-turned-onoff",
+        "id": "maxpower-changed",
         "highlight": true,
         "title": {
-          "en": "Turned partially on/off",
-          "no": "Slått delvis av/på"
+          "en": "Max power changed",
+          "no": "Maks effekt endret seg"
         },
         "hint": {
-          "en": "Any of the heating elements was put into on/off state",
-          "no": "Et eller flere av varmeelementene i tanken slo seg av eller på"
+          "en": "The maximum allowed power changed",
+          "no": "Den maksimalt tillatte effekten endret seg"
         },
         "tokens": [
           {
-            "type": "boolean",
-            "name": "upper-on",
+            "type": "number",
+            "name": "max_power",
             "title": {
-              "en": "Upper element",
-              "no": "Øvre element"
+              "en": "Max power in Watts",
+              "no": "Maks effekt i Watt"
             },
             "example": {
-              "en": "True when the upper heating element is on",
-              "no": "Sann når øvre varmeelement er slått på"
-            }
-          },
-          {
-            "type": "boolean",
-            "name": "lower-on",
-            "title": {
-              "en": "Lower element",
-              "no": "Nedre element"
-            },
-            "example": {
-              "en": "True when the lower heating element is on",
-              "no": "Sann når nedre varmeelement er slått på"
+              "en": "W",
+              "no": "W"
             }
           }
         ]
@@ -41,38 +29,30 @@
   ],
   "actions": [
     {
-        "id": "turn-water-heater-onoff",
+        "id": "change-maxpower",
         "highlight": true,
         "title": {
-            "en": "Turn partially on/off",
-            "no": "Slå delvis av/på"
+            "en": "Change maximum power",
+            "no": "Endre maks effekt"
         },
         "titleFormatted": {
-            "en": "Turn upper element [[upper]] and lower element [[lower]]",
-            "no": "Slå øvre element [[upper]] og nedre element [[lower]]"
+            "en": "Change max power to [[max_power]]",
+            "no": "Endre maks effekt til [[max_power]]"
         },
         "hint": {
-            "en": "Turns any of the heating elements on or off",
-            "no": "Slå av og på elementene i varmtvannstanken"
+            "en": "Changes the maximum power of the water heater",
+            "no": "Endrer maks effekt for varmtvannstanken"
         },
         "args": [
             {
             "type": "dropdown",
-            "title": { "en": "Upper heating element (700W)", "no": "Øvre varmeelement (700W)" },
+            "title": { "en": "Max power", "no": "Maks effekt" },
             "values": [
-                { "id": "true",  "label": { "en": "On",  "no": "På" } },
-                { "id": "false", "label": { "en": "Off", "no": "Av" } }
+                { "id": "low_power",    "label": { "en": "700 W",   "no": "700 W" } },
+                { "id": "medium_power", "label": { "en": "1300 W",  "no": "1300 W" } },
+                { "id": "high_power",   "label": { "en": "2000 W",  "no": "2000 W" } }
             ],
-            "name": "upper"
-            },
-            {
-            "type": "dropdown",
-            "title": { "en": "Lower heating element (1300W)", "no": "Nedre varmeelement (1300W)" },
-            "values": [
-                { "id": "true",  "label": { "en": "On",  "no": "På" } },
-                { "id": "false", "label": { "en": "Off", "no": "Av" } }
-            ],
-            "name": "lower"
+            "name": "max_power"
             }
         ]
     }

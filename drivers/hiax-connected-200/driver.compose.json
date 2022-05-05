@@ -5,16 +5,14 @@
   },
   "class": "heater",
   "capabilities": [
+    "max_power",
     "meter_power.accumulated",
     "meter_power.in_tank",
     "measure_power",
     "target_temperature",
     "measure_temperature",
     "onoff",
-    "onoff.upper",
-    "onoff.lower",
-    "measure_humidity.fill_level",
-    "measure_humidity.efficiency"
+    "measure_humidity.fill_level"
   ],
   "capabilitiesOptions": {
     "meter_power.accumulated": {
@@ -34,34 +32,10 @@
       "min": 20,
       "max": 85
     },
-    "onoff": {
-      "title": {
-        "en": "Both elements 2000W",
-        "no": "Begge element 2000W"
-      }
-    },
-    "onoff.upper": {
-      "title": {
-        "en": "Upper element 700W",
-        "no": "Øvre element 700W"
-      }
-    },
-    "onoff.lower": {
-      "title": {
-        "en": "Lower element 1300W",
-        "no": "Nedre element 1300W"
-      }
-    },
     "measure_humidity.fill_level": {
       "title": {
         "en": "Fill level",
         "no": "Fyllingsgrad"
-      }
-    },
-    "measure_humidity.efficiency": {
-      "title": {
-        "en": "Efficiency",
-        "no": "Effektivitet"
       }
     }
   },

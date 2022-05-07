@@ -9,19 +9,22 @@
     "values": [{
     "id": "low_power",
         "title": {
-          "en": "Low power - 700 W"
+          "en": "Low power - 700 W",
+          "no": "Lav effekt - 700 W"
         }
       },
       {
         "id": "medium_power",
         "title": {
-          "en": "Medium power - 1300 W"
+          "en": "Medium power - 1300 W",
+          "no": "Middels effekt - 1300 W"
         }
       },
       {
         "id": "high_power",
         "title": {
-          "en": "Max power - 2000 W"
+          "en": "Max power - 2000 W",
+          "no": "Maks effekt - 2000 W"
         }
       }],
     "uiComponent": "picker",

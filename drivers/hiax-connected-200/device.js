@@ -51,7 +51,9 @@ class MyHoiaxDevice extends OAuth2Device {
 
       // Make sure that the Heater mode is controllable - set to External mode
       const heater_mode = await this.oAuth2Client.getDevicePoints(deviceId, '500');
-      if (heater_mode[0].value != 8) { // 8 == External
+      if (heater_mode[0] == undefined) {
+        throw new Error('Problems reading heater mode: ' + heater_mode.message);
+      } else if (heater_mode[0].value != 8) { // 8 == External
         let res = undefined
         try {
           res = await this.oAuth2Client.setDevicePoint(deviceId, { '500': '8' });

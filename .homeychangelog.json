@@ -10,5 +10,8 @@
   },
   "1.1.1": {
     "en": "Compliancy fixes"
+  },
+  "1.1.2": {
+    "en": "Added norwegian text to max power selector"
   }
 }

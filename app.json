@@ -208,7 +208,103 @@
           "template": "login_oauth2"
         }
       ],
-      "id": "hiax-connected-200"
+      "id": "hiax-connected-200",
+      "settings": [
+        {
+          "id": "ambient_temperature",
+          "type": "number",
+          "label": {
+            "en": "Average Ambient Temperature",
+            "no": "Gjennomsnittlig romtemperatur"
+          },
+          "hint": {
+            "en": "Used internally when calculating energy in tank",
+            "no": "Brukes internt for å regne ut energien i tanken"
+          },
+          "value": 0,
+          "min": 10,
+          "max": 35,
+          "units": {
+            "en": "°C",
+            "no": "°C"
+          }
+        },
+        {
+          "id": "inlet_temperature",
+          "type": "number",
+          "label": {
+            "en": "Average Inlet Water Temperature",
+            "no": "Gjennomsnittlig temperatur på vanninntak"
+          },
+          "hint": {
+            "en": "Used internally when calculating energy in tank",
+            "no": "Brukes internt for å regne ut energien i tanken"
+          },
+          "value": 0,
+          "min": 4,
+          "max": 20,
+          "units": {
+            "en": "°C",
+            "no": "°C"
+          }
+        },
+        {
+          "id": "max_water_flow",
+          "type": "number",
+          "label": {
+            "en": "Max Water Flow",
+            "no": "Maks vanngjennomstrømning"
+          },
+          "hint": {
+            "en": "Used internally when calculating energy in tank",
+            "no": "Brukes internt for å regne ut energien i tanken"
+          },
+          "value": 0,
+          "min": 5,
+          "max": 40,
+          "units": {
+            "en": "l/m",
+            "no": "l/m"
+          }
+        },
+        {
+          "id": "regulation_diff",
+          "type": "number",
+          "label": {
+            "en": "Regulation Diff",
+            "no": "Hysterese"
+          },
+          "hint": {
+            "en": "Allows the temperature to drop this many degrees before heating up again",
+            "no": "Antall grader vanntemperaturen kan falle før den varmes opp igjen"
+          },
+          "value": 0,
+          "min": 3,
+          "max": 10,
+          "units": {
+            "en": "°C",
+            "no": "°C"
+          }
+        },
+        {
+          "id": "legionella_frequency",
+          "type": "number",
+          "label": {
+            "en": "Frequency for legionella program",
+            "no": "Frekvens for legionella-program"
+          },
+          "hint": {
+            "en": "If the temperature in the tank is set below",
+            "no": "Tillater temperaturen å falle så mye før vannet varmes opp igjen"
+          },
+          "value": 0,
+          "min": 2,
+          "max": 8,
+          "units": {
+            "en": "weeks"
+          }
+        }
+      ]
     }
   ],
   "capabilities": {

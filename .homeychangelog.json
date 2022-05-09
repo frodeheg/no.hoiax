@@ -16,5 +16,8 @@
   },
   "1.2.0": {
     "en": "Added support to set some internal variables for the heater (ambient_temperature, inlet_temperature, legionella_frequency, max_water_flow and regulation_diff + added Nor"
+  },
+  "1.2.1": {
+    "en": "Fixed hint for legionella program frequency"
   }
 }

@@ -83,8 +83,8 @@
     "no": "Frekvens for legionella-program"
   },
   "hint": {
-    "en": "If the temperature in the tank is set below",
-    "no": "Tillater temperaturen å falle så mye før vannet varmes opp igjen"
+    "en": "Number of weeks between every Legionella program",
+    "no": "Antall uker mellom hvert legionellaprogram"
   },
   "value": 0,
   "min": 2,

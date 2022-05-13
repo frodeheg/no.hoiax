@@ -19,5 +19,8 @@
   },
   "1.2.1": {
     "en": "Fixed hint for legionella program frequency"
+  },
+  "1.2.2": {
+    "en": "Made code more reliable + added debug to understand further crashes"
   }
 }

@@ -3,6 +3,28 @@
 const { privateEncrypt } = require('crypto');
 const { OAuth2Device } = require('homey-oauth2app');
 
+
+// Mapping between settings and controller keys
+const key_map = {
+  ambient_temperature:  "100",
+  inlet_temperature:    "101",
+  max_water_flow:       "512",
+  regulation_diff:      "516",
+  legionella_frequency: "511",
+  controling_device:    "500"
+}
+
+
+// Clones an associative array
+function clone(obj) {
+  if (null == obj || "object" != typeof obj) return obj;
+  var copy = obj.constructor();
+  for (var attr in obj) {
+      if (obj.hasOwnProperty(attr)) copy[attr] = clone(obj[attr]);
+  }
+  return copy;
+}
+
 class MyHoiaxDevice extends OAuth2Device {
 
   async setHeaterState(deviceId, turn_on, new_power) {
@@ -60,21 +82,40 @@ class MyHoiaxDevice extends OAuth2Device {
       this.is_on = true
 
       // Update internal setup state once only
-      const internal_state = await this.oAuth2Client.getDevicePoints(this.deviceId, '100,101,511,512,516');
-      await this.setSettings({
-        ambient_temperature: internal_state[0].value, // 100
-        inlet_temperature:   internal_state[1].value, // 101
-        legionella_frequency:internal_state[2].value, // 511
-        max_water_flow:      internal_state[3].value, // 512
-        regulation_diff:     internal_state[4].value, // 516
-      });
-  
+      var state_request = await this.oAuth2Client.getDevicePoints(this.deviceId, '100,101,500,511,512,516');
+      var reverse_key_map = {}
+      let keys = Object.keys(key_map)
+      for (let key_nr = 0; key_nr < keys.length; key_nr++) {
+        reverse_key_map[key_map[keys[key_nr]]] = keys[key_nr]
+      }
+      var internal_states = {}
+      if (Array.isArray(state_request)) {
+        for (var val = 0; val < state_request.length; val++) {
+          if ('parameterId' in state_request[val] && 'value' in state_request[val]) {
+            internal_states[reverse_key_map[state_request[val].parameterId]] = state_request[val].value;
+          }
+        }
+      }
+
+      if (Object.keys(internal_states).length != 6) {
+        var debug_txt = JSON.stringify(state_request).substring(0,300)
+        throw new Error("Unable to initialize driver - device state could not be read - try restarting the app. (for debug: " + debug_txt)
+      }
+
+      // setSettings does not support type dropdown currently (Athom bug)
+      // See https://community.homey.app/t/setsettings-does-not-work-for-all-types-of-settings/63614 for details
+      // Thus we need to remove all dropdown types before calling the function
+      // TODO: replace this code when Athom has fixed their bug
+      let to_settings = clone(internal_states)
+      delete(to_settings.controling_device)
+      await this.setSettings(to_settings);
+
       // Update internal state every 5 minute:
       await this.updateState(this.deviceId)
       setInterval(() => {
         this.updateState(this.deviceId)
       }, 1000*60*5)
-      
+
       // Custom flows
       const OnMaxPowerAction  = this.homey.flow.getActionCard('change-maxpower')
 
@@ -113,40 +154,16 @@ class MyHoiaxDevice extends OAuth2Device {
 
   async onSettings({ oldSettings, newSettings, changedKeys }) {
     this.log("Settings changed")
-    
-    if (changedKeys.includes("ambient_temperature")) {
-      this.log("Ambient temperature changed: ", newSettings.ambient_temperature)
-      const response = await this.oAuth2Client.setDevicePoint(this.deviceId, { '100': newSettings.ambient_temperature });
-      if (response.ok === false) {
-        throw new Error('Unable to Control device - Failed to set Ambient temperature');
-      }
+
+    let key_change = {}
+    for (var key_nr = 0; key_nr < changedKeys.length; key_nr++) {
+      this.log(changedKeys[key_nr] + " changed: ", newSettings[changedKeys[key_nr]], " (key: ", key_map[changedKeys[key_nr]], ")")
+      key_change[key_map[changedKeys[key_nr]]] = newSettings[changedKeys[key_nr]]
     }
-    if (changedKeys.includes("inlet_temperature")) {
-      this.log("Inlet temperature changed: ", newSettings.inlet_temperature)
-      const response = await this.oAuth2Client.setDevicePoint(this.deviceId, { '101': newSettings.inlet_temperature });
+    if (Object.keys(key_change).length > 0) {
+      const response = await this.oAuth2Client.setDevicePoint(this.deviceId, key_change);
       if (response.ok === false) {
-        throw new Error('Unable to Control device - Failed to set Inlet temperature');
-      }
-    }
-    if (changedKeys.includes("max_water_flow")) {
-      this.log("Max water flow changed: ", newSettings.max_water_flow)
-      const response = await this.oAuth2Client.setDevicePoint(this.deviceId, { '512': newSettings.max_water_flow });
-      if (response.ok === false) {
-        throw new Error('Unable to Control device - Failed to set max water flow');
-      }
-    }
-    if (changedKeys.includes("regulation_diff")) {
-      this.log("Regulation diff changed: ", newSettings.regulation_diff)
-      const response = await this.oAuth2Client.setDevicePoint(this.deviceId, { '516': newSettings.regulation_diff });
-      if (response.ok === false) {
-        throw new Error('Unable to Control device - Failed to set regulation diff');
-      }
-    }
-    if (changedKeys.includes("legionella_frequency")) {
-      this.log("Legionella frequency changed: ", newSettings.legionella_frequency)
-      const response = await this.oAuth2Client.setDevicePoint(this.deviceId, { '511': newSettings.legionella_frequency });
-      if (response.ok === false) {
-        throw new Error('Unable to Control device - Failed to set Legionella program frequency');
+        throw new Error('Unable to Control device - Failed to set ' + JSON.stringify(changedKeys));
       }
     }
   }

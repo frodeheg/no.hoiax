@@ -303,6 +303,63 @@
           "units": {
             "en": "weeks"
           }
+        },
+        {
+          "id": "controling_device",
+          "type": "dropdown",
+          "value": "8",
+          "label": {
+            "en": "Controlling device",
+            "no": "Styringsenhet"
+          },
+          "values": [
+            {
+              "id": "3",
+              "label": {
+                "en": "Self (Eco mode)",
+                "no": "Selvstendig (Øko modus)"
+              }
+            },
+            {
+              "id": "4",
+              "label": {
+                "en": "Self (Normal mode)",
+                "no": "Selvstendig (Normal modus)"
+              }
+            },
+            {
+              "id": "7",
+              "label": {
+                "en": "Self (Schedule)",
+                "no": "Selvstendig (Timeplan)"
+              }
+            },
+            {
+              "id": "8",
+              "label": {
+                "en": "Homey",
+                "no": "Homey"
+              }
+            },
+            {
+              "id": "10",
+              "label": {
+                "en": "Self (Vacation)",
+                "no": "Selvstendig (Ferie)"
+              }
+            },
+            {
+              "id": "11",
+              "label": {
+                "en": "Self (Boost)",
+                "no": "Selvstendig (Boost)"
+              }
+            }
+          ],
+          "hint": {
+            "en": "WARNING: This must be set to Homey in order for the App to function",
+            "no": "ADVARSEL: Hvis ikke denne er satt til Homey vil ikke appen fungere"
+          }
         }
       ]
     }

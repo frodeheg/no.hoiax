@@ -22,5 +22,8 @@
   },
   "1.2.2": {
     "en": "Made code more reliable + added debug to understand further crashes"
+  },
+  "1.2.3": {
+    "en": "Improved handling of invalid username/password"
   }
 }

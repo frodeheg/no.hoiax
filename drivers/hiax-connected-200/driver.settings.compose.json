@@ -89,7 +89,10 @@
   "value": 0,
   "min": 2,
   "max": 8,
-  "units": { "en": "weeks" }
+  "units": {
+    "en": "weeks",
+    "no": "uker"
+  }
 },
 {
   "id": "controling_device",

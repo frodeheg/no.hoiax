@@ -57,10 +57,11 @@ class MyHoiaxDevice extends OAuth2Device {
   /**
    * onOAuth2Init is called when the device is initialized.
    */
-   async onOAuth2Init() {
-      this.log('MyHoiaxDevice was initialized');
-      this.deviceId = this.getData().deviceId
+  async onOAuth2Init() {
+    this.log('MyHoiaxDevice was initialized');
+    this.deviceId = this.getData().deviceId
 
+    try {
       // Make sure that the Heater mode is controllable - set to External mode
       const heater_mode = await this.oAuth2Client.getDevicePoints(this.deviceId, '500');
       if (heater_mode[0] == undefined) {
@@ -150,7 +151,10 @@ class MyHoiaxDevice extends OAuth2Device {
         }
         this.log('Target temp:', value)
       })
+    } catch {
+      this.setUnavailable("Could not initialize the device properly. This is most likely related to authentication issues. Please press the repair button to enter username/password again or restart the app. If it is still not working contact the developer through the forum.")
     }
+  }
 
   async onSettings({ oldSettings, newSettings, changedKeys }) {
     this.log("Settings changed")

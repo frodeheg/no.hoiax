@@ -25,5 +25,8 @@
   },
   "1.2.3": {
     "en": "Improved handling of invalid username/password"
+  },
+  "1.2.4": {
+    "en": "Changed from crashing with log to updating the unavailable state. This makes the problem clearer to the user."
   }
 }

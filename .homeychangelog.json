@@ -28,5 +28,8 @@
   },
   "1.2.4": {
     "en": "Changed from crashing with log to updating the unavailable state. This makes the problem clearer to the user."
+  },
+  "1.2.5": {
+    "en": "Added missing unit for norwegian translation of legionella program"
   }
 }

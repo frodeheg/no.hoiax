@@ -211,156 +211,258 @@
       "id": "hiax-connected-200",
       "settings": [
         {
-          "id": "ambient_temperature",
-          "type": "number",
+          "type": "group",
           "label": {
-            "en": "Average Ambient Temperature",
-            "no": "Gjennomsnittlig romtemperatur"
+            "en": "Tank settings",
+            "no": "Tank innstillinger"
           },
-          "hint": {
-            "en": "Used internally when calculating energy in tank",
-            "no": "Brukes internt for å regne ut energien i tanken"
-          },
-          "value": 0,
-          "min": 10,
-          "max": 35,
-          "units": {
-            "en": "°C",
-            "no": "°C"
-          }
-        },
-        {
-          "id": "inlet_temperature",
-          "type": "number",
-          "label": {
-            "en": "Average Inlet Water Temperature",
-            "no": "Gjennomsnittlig temperatur på vanninntak"
-          },
-          "hint": {
-            "en": "Used internally when calculating energy in tank",
-            "no": "Brukes internt for å regne ut energien i tanken"
-          },
-          "value": 0,
-          "min": 4,
-          "max": 20,
-          "units": {
-            "en": "°C",
-            "no": "°C"
-          }
-        },
-        {
-          "id": "max_water_flow",
-          "type": "number",
-          "label": {
-            "en": "Max Water Flow",
-            "no": "Maks vanngjennomstrømning"
-          },
-          "hint": {
-            "en": "Used internally when calculating energy in tank",
-            "no": "Brukes internt for å regne ut energien i tanken"
-          },
-          "value": 0,
-          "min": 5,
-          "max": 40,
-          "units": {
-            "en": "l/m",
-            "no": "l/m"
-          }
-        },
-        {
-          "id": "regulation_diff",
-          "type": "number",
-          "label": {
-            "en": "Regulation Diff",
-            "no": "Hysterese"
-          },
-          "hint": {
-            "en": "Allows the temperature to drop this many degrees before heating up again",
-            "no": "Antall grader vanntemperaturen kan falle før den varmes opp igjen"
-          },
-          "value": 0,
-          "min": 3,
-          "max": 10,
-          "units": {
-            "en": "°C",
-            "no": "°C"
-          }
-        },
-        {
-          "id": "legionella_frequency",
-          "type": "number",
-          "label": {
-            "en": "Frequency for legionella program",
-            "no": "Frekvens for legionella-program"
-          },
-          "hint": {
-            "en": "Number of weeks between every Legionella program",
-            "no": "Antall uker mellom hvert legionellaprogram"
-          },
-          "value": 0,
-          "min": 2,
-          "max": 8,
-          "units": {
-            "en": "weeks",
-            "no": "uker"
-          }
-        },
-        {
-          "id": "controling_device",
-          "type": "dropdown",
-          "value": "8",
-          "label": {
-            "en": "Controlling device",
-            "no": "Styringsenhet"
-          },
-          "values": [
+          "children": [
             {
-              "id": "3",
+              "id": "ambient_temperature",
+              "type": "number",
               "label": {
-                "en": "Self (Eco mode)",
-                "no": "Selvstendig (Øko modus)"
+                "en": "Average Ambient Temperature",
+                "no": "Gjennomsnittlig romtemperatur"
+              },
+              "hint": {
+                "en": "Used internally when calculating energy in tank",
+                "no": "Brukes internt for å regne ut energien i tanken"
+              },
+              "value": 0,
+              "min": 10,
+              "max": 35,
+              "units": {
+                "en": "°C",
+                "no": "°C"
               }
             },
             {
-              "id": "4",
+              "id": "inlet_temperature",
+              "type": "number",
               "label": {
-                "en": "Self (Normal mode)",
-                "no": "Selvstendig (Normal modus)"
+                "en": "Average Inlet Water Temperature",
+                "no": "Gjennomsnittlig temperatur på vanninntak"
+              },
+              "hint": {
+                "en": "Used internally when calculating energy in tank",
+                "no": "Brukes internt for å regne ut energien i tanken"
+              },
+              "value": 0,
+              "min": 4,
+              "max": 20,
+              "units": {
+                "en": "°C",
+                "no": "°C"
               }
             },
             {
-              "id": "7",
+              "id": "max_water_flow",
+              "type": "number",
               "label": {
-                "en": "Self (Schedule)",
-                "no": "Selvstendig (Timeplan)"
+                "en": "Max Water Flow",
+                "no": "Maks vanngjennomstrømning"
+              },
+              "hint": {
+                "en": "Used internally when calculating energy in tank",
+                "no": "Brukes internt for å regne ut energien i tanken"
+              },
+              "value": 0,
+              "min": 5,
+              "max": 40,
+              "units": {
+                "en": "l/m",
+                "no": "l/m"
               }
             },
             {
-              "id": "8",
+              "id": "regulation_diff",
+              "type": "number",
               "label": {
-                "en": "Homey",
-                "no": "Homey"
+                "en": "Regulation Diff",
+                "no": "Hysterese"
+              },
+              "hint": {
+                "en": "Allows the temperature to drop this many degrees before heating up again",
+                "no": "Antall grader vanntemperaturen kan falle før den varmes opp igjen"
+              },
+              "value": 0,
+              "min": 3,
+              "max": 10,
+              "units": {
+                "en": "°C",
+                "no": "°C"
               }
             },
             {
-              "id": "10",
+              "id": "legionella_frequency",
+              "type": "number",
               "label": {
-                "en": "Self (Vacation)",
-                "no": "Selvstendig (Ferie)"
+                "en": "Frequency for legionella program",
+                "no": "Frekvens for legionella-program"
+              },
+              "hint": {
+                "en": "Number of weeks between every Legionella program",
+                "no": "Antall uker mellom hvert legionellaprogram"
+              },
+              "value": 0,
+              "min": 2,
+              "max": 8,
+              "units": {
+                "en": "weeks",
+                "no": "uker"
               }
             },
             {
-              "id": "11",
+              "id": "controling_device",
+              "type": "dropdown",
+              "value": "8",
               "label": {
-                "en": "Self (Boost)",
-                "no": "Selvstendig (Boost)"
+                "en": "Controlling device",
+                "no": "Styringsenhet"
+              },
+              "values": [
+                {
+                  "id": "3",
+                  "label": {
+                    "en": "Self (Eco mode)",
+                    "no": "Selvstendig (Øko modus)"
+                  }
+                },
+                {
+                  "id": "4",
+                  "label": {
+                    "en": "Self (Normal mode)",
+                    "no": "Selvstendig (Normal modus)"
+                  }
+                },
+                {
+                  "id": "7",
+                  "label": {
+                    "en": "Self (Schedule)",
+                    "no": "Selvstendig (Timeplan)"
+                  }
+                },
+                {
+                  "id": "8",
+                  "label": {
+                    "en": "Homey",
+                    "no": "Homey"
+                  }
+                },
+                {
+                  "id": "10",
+                  "label": {
+                    "en": "Self (Vacation)",
+                    "no": "Selvstendig (Ferie)"
+                  }
+                },
+                {
+                  "id": "11",
+                  "label": {
+                    "en": "Self (Boost)",
+                    "no": "Selvstendig (Boost)"
+                  }
+                }
+              ],
+              "hint": {
+                "en": "WARNING: This must be set to Homey in order for the App to function",
+                "no": "ADVARSEL: Hvis ikke denne er satt til Homey vil ikke appen fungere"
               }
             }
-          ],
-          "hint": {
-            "en": "WARNING: This must be set to Homey in order for the App to function",
-            "no": "ADVARSEL: Hvis ikke denne er satt til Homey vil ikke appen fungere"
-          }
+          ]
+        },
+        {
+          "type": "group",
+          "label": {
+            "en": "Status",
+            "no": "Status"
+          },
+          "children": [
+            {
+              "id": "TankVolume",
+              "type": "label",
+              "label": {
+                "en": "Tank Volume",
+                "no": "Tank Volum"
+              },
+              "value": "???l",
+              "hint": {
+                "en": "The size of the tank.",
+                "no": "Størrelsen på tanken."
+              }
+            },
+            {
+              "id": "SerialNo",
+              "type": "label",
+              "label": {
+                "en": "Serial Number",
+                "no": "Serienummer"
+              },
+              "value": "???",
+              "hint": {
+                "en": "The serial number of the tank.",
+                "no": "Serienummeret til tanken."
+              }
+            },
+            {
+              "id": "HeaterNomPower",
+              "type": "label",
+              "label": {
+                "en": "Nominal power element 1",
+                "no": "Nominell power element 1"
+              },
+              "value": "???",
+              "hint": {
+                "en": "The nominal power for heating element 1.",
+                "no": "Den nominelle styrken til varmeelement 1."
+              }
+            },
+            {
+              "id": "HeaterNomPower2",
+              "type": "label",
+              "label": {
+                "en": "Nominal power element 2",
+                "no": "Nominell power element 2"
+              },
+              "value": "???",
+              "hint": {
+                "en": "The nominal power for heating element 2.",
+                "no": "Den nominelle styrken til varmeelement 2."
+              }
+            },
+            {
+              "id": "systemId",
+              "type": "label",
+              "label": {
+                "en": "systemId"
+              },
+              "value": "???"
+            },
+            {
+              "id": "systemName",
+              "type": "label",
+              "label": {
+                "en": "systemName"
+              },
+              "value": "???"
+            },
+            {
+              "id": "deviceId",
+              "type": "label",
+              "label": {
+                "en": "deviceId"
+              },
+              "value": "???"
+            },
+            {
+              "id": "deviceName",
+              "type": "label",
+              "label": {
+                "en": "deviceName"
+              },
+              "value": "???"
+            }
+          ]
         }
       ]
     }

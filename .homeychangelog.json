@@ -34,5 +34,8 @@
   },
   "1.3.0": {
     "en": "Added error handling in case of bad internet connection + added passive readouts of some device settings"
+  },
+  "1.3.1": {
+    "en": "Added cleanup function to remove ghost intervals that kept running after the device had been deleted"
   }
 }

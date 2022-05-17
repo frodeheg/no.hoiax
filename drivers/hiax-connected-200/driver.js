@@ -32,10 +32,6 @@ class HoiaxDriver extends OAuth2Driver {
     // Fetch only the first page as nobody will ever control more than 10 water tanks with Homey
     const things = await oAuth2Client.getDevices({ page: 1 });
 
-    if (things.numItems == 0) {
-      throw new Error('No devices was found');
-    }
-
     // NOTE: This code has Never been tested with more than 1 device but should support more
     for (let item_nr = 0; item_nr < things.numItems; item_nr++) {
       const system = things.systems[item_nr]

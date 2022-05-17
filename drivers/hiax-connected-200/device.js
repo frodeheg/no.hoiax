@@ -99,6 +99,7 @@ class MyHoiaxDevice extends OAuth2Device {
     this.log('MyHoiaxDevice was initialized');
     this.setUnavailable("Initializing device.")
     this.deviceId = this.getData().deviceId
+    this.intervalID = undefined
 
     // Make sure that the Heater mode is controllable - set to External mode
     let heater_mode = undefined
@@ -177,7 +178,7 @@ class MyHoiaxDevice extends OAuth2Device {
 
     // Update internal state every 5 minute:
     await this.updateState(this.deviceId)
-    setInterval(() => {
+    this.intervalID = setInterval(() => {
       this.updateState(this.deviceId)
     }, 1000*60*5)
 
@@ -223,6 +224,15 @@ class MyHoiaxDevice extends OAuth2Device {
       this.log('Target temp:', value)
     })
     this.setAvailable()
+  }
+
+  //
+  async onOAuth2Deleted() {
+    // Make sure the interval is cleared if it was started, otherwise it will continue to
+    // trigger but on an unknown device.
+    if (this.intervalID != undefined) {
+      clearInterval(this.intervalID)
+    }
   }
 
   async onSettings({ oldSettings, newSettings, changedKeys }) {

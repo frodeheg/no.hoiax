@@ -263,29 +263,43 @@ class MyHoiaxDevice extends OAuth2Device {
     while (dev_points == undefined) {
       try {
         dev_points = await this.oAuth2Client.getDevicePoints(deviceId, '302,303,400,404,517,527,528');
-      } catch {
+      } catch(err) {
         this.setUnavailable("Network problem: " + err)
         await sleep(retryOnErrorWaitTime)
       }
     }
-    this.setAvailable() // In case it was set to unavailable
-    this.setCapabilityValue('meter_power.in_tank', dev_points[0].value) // 302 = EnergyStored
-    this.setCapabilityValue('meter_power.accumulated', dev_points[1].value) // 303 = EnergyTotal
-    this.setCapabilityValue('measure_power', dev_points[2].value) // 400 = EstimatedPower
-    this.setCapabilityValue('measure_humidity.fill_level', dev_points[3].value) //404 = FillLevel
     //this.setCapabilityValue('measure_humidity.efficiency', dev_points[4].value) //405 = HeaterEfficiency
-    let current_max_power = dev_points[4].value // 517 = Requested power
-    // Value 0 = Off, 1 = 700W, 2 = 1300W, 3 = 2000W
-    if (current_max_power == 0) {
-      // Heater is off
-      this.is_on     = false
-    } else {
-      this.is_on     = true
-      this.max_power = current_max_power
+    if ("value" in dev_points[0]) { // 302 = EnergyStored
+      this.setCapabilityValue('meter_power.in_tank', dev_points[0].value)
     }
-    this.setHeaterState(deviceId, this.is_on, this.max_power)
-    this.setCapabilityValue('target_temperature', dev_points[5].value) // 527 = Requested temperature
-    this.setCapabilityValue('measure_temperature', dev_points[6].value) // 528 = Measured temperature
+    if ("value" in dev_points[1]) { // 303 = EnergyTotal
+      this.setCapabilityValue('meter_power.accumulated', dev_points[1].value)
+    }
+    if ("value" in dev_points[2]) { // 400 = EstimatedPower
+      this.setCapabilityValue('measure_power', dev_points[2].value)
+    }
+    if ("value" in dev_points[3]) { //404 = FillLevel
+      this.setCapabilityValue('measure_humidity.fill_level', dev_points[3].value)
+    }
+    if ("value" in dev_points[4]) { // 517 = Requested power
+      let current_max_power = dev_points[4].value
+      // Value 0 = Off, 1 = 700W, 2 = 1300W, 3 = 2000W
+      if (current_max_power == 0) {
+        // Heater is off
+        this.is_on     = false
+      } else {
+        this.is_on     = true
+        this.max_power = current_max_power
+      }
+      this.setHeaterState(deviceId, this.is_on, this.max_power)
+    }
+    if ("value" in dev_points[5]) { // 527 = Requested temperature
+      this.setCapabilityValue('target_temperature', dev_points[5].value)
+    }
+    if ("value" in dev_points[6]) { // 528 = Measured temperature
+      this.setCapabilityValue('measure_temperature', dev_points[6].value)
+    }
+    this.setAvailable() // In case it was set to unavailable
   }
 
   async onOAuth2Deleted() {

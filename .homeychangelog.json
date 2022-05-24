@@ -40,5 +40,8 @@
   },
   "1.3.2": {
     "en": "Fixed some crashes when fetching device values during bad internet connections"
+  },
+  "1.3.3": {
+    "en": "Updated some dependencies"
   }
 }

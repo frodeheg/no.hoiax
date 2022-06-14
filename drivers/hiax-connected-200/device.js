@@ -71,6 +71,27 @@ class MyHoiaxDevice extends OAuth2Device {
     this.max_power = new_power
   }
 
+  async setAmbientTemp(deviceId, ambient_temp) {
+    if (isNaN(ambient_temp)) {
+      return;
+    }
+    this.log("New ambient temperature:" + String(ambient_temp))
+    this.outsideTemp = ambient_temp;
+    let key_change = {}
+    key_change[key_map['ambient_temperature']] = this.outsideTemp;
+    let response = undefined
+    while (response == undefined || response.ok == false) {
+      try {
+        response = await this.oAuth2Client.setDevicePoint(deviceId, key_change);
+      }
+      catch(err) {
+        this.setUnavailable("Network problem: " + err)
+        await sleep(retryOnErrorWaitTime)
+      }
+    }
+    this.setAvailable() // In case it was set to unavailable
+  }
+
 
 
   /**
@@ -117,12 +138,14 @@ class MyHoiaxDevice extends OAuth2Device {
     this.pastLeakage = [];
     this.prevAccumTime = this.getStoreValue("prevAccumTime");
     this.currentLeakage = this.getStoreValue("currentLeakage");
+    this.leakageConstant = this.getStoreValue("leakageConstant");
     this.accumulatedLeakage = this.getStoreValue("accumulatedLeakage");
     if (this.prevAccumTime == undefined) this.prevAccumTime = new Date();
     if (this.currentLeakage == undefined) this.currentLeakage = 0;
+    if (this.leakageConstant == undefined) this.leakageConstant = 12.696;
     if (this.accumulatedLeakage == undefined) this.accumulatedLeakage = 0;
 
-    this.outsideTemp = 24;  // Should be updated by flow (in the future)
+    this.outsideTemp = 24;  // Updated by a flow if set up
     this.tankVolume  = 178; // Updated by settings
 
     // Make sure that the Heater mode is controllable - set to External mode
@@ -177,7 +200,7 @@ class MyHoiaxDevice extends OAuth2Device {
     if (Array.isArray(state_request)) {
       for (var val = 0; val < state_request.length; val++) {
         if ('parameterId' in state_request[val]) {
-          if (state_request[val].writable == false) {
+          if (state_request[val].writable === false) {
             internal_states[reverse_key_map[state_request[val].parameterId]] = state_request[val].strVal; // Value with unit
             if (parseInt(state_request[val].parameterId) == 526) {
               this.tankVolume = parseInt(state_request[val].value);
@@ -220,9 +243,19 @@ class MyHoiaxDevice extends OAuth2Device {
         (state['max_power'] == "medium_power") ? 2 : 3 )
     })
 
+    const OnAmbientAction  = this.homey.flow.getActionCard('change-ambient-temp')
+
+    OnAmbientAction.registerRunListener(async (state) => {
+      await this.setAmbientTemp(this.deviceId, state['ambient_temp'])
+    })
+
     // Register on/off handling
     this.registerCapabilityListener('onoff', async (turn_on) => {
       await this.setHeaterState(this.deviceId, turn_on, this.max_power)
+    })
+    // Register ambient temperature handling (probably not required as the capability is hidden)
+    this.registerCapabilityListener('ambient_temp', async (ambient_temp) => {
+      await this.setAmbientTemp(this.deviceId, ambient_temp)
     })
     // Register max power handling
     this.registerCapabilityListener('max_power', async (value) => {
@@ -292,7 +325,7 @@ class MyHoiaxDevice extends OAuth2Device {
     var tempDiff  = temperature - this.prevTemp;
     var storeDiff = in_tank     - this.prevStored; // diff in kWh
     var timeDiff  = new_time    - this.prevTime;   // diff in ms
-    var outerTempDiff = in_tank - this.outsideTemp;
+    var outerTempDiff = temperature - this.outsideTemp;
     this.prevPower = total_usage;
     this.prevTemp  = temperature;
     this.prevStored= in_tank;
@@ -333,18 +366,16 @@ class MyHoiaxDevice extends OAuth2Device {
       }
     }
 
-    // Do not continue before sufficient data has been logged
-    if (include_count < 12) {
-      this.log("Skip calculating leakage - more data is needed");
-      return;
-    }
-    
     var keys = Object.keys(temp_diffs);
     var sortedKeys = keys.sort(function(a,b){return temp_diffs[b]-temp_diffs[a]});
     // sortedKeys[0] should always be included, but sortedKeys[1] may not be if it is not next to it,
     var key0 = sortedKeys[0];
     var key1 = undefined;
-    if ((sortedKeys.length>1) && (Math.abs(parseInt(sortedKeys[1]*10) - parseInt(sortedKeys[0]*10)) != 1)) {
+    if (include_count == 0 || temp_diffs[sortedKeys[0]] < 10) {
+      // Do not continue before sufficient data has been logged
+      this.log("Too few entries recorded, fall back on old calculations");
+      key0 = undefined;
+    } else if ((sortedKeys.length>1) && (Math.abs(parseInt(sortedKeys[1]*10) - parseInt(sortedKeys[0]*10)) != 1)) { // Key0 and key1 are not neighbours
       if (temp_diffs[sortedKeys[0]] < 3 * temp_diffs[sortedKeys[1]]) {
         // If  key 1 is not next to key 0 and there is a small difference then the signal to noise ratio is too big.
         // Too noisy
@@ -358,7 +389,7 @@ class MyHoiaxDevice extends OAuth2Device {
       key1a = key1a.toFixed(1);
       key1b = key1b.toFixed(1);
       if (!(key1a in temp_diffs || key1b in temp_diffs)) {
-        // Use key0 only
+        // Found neither side of key0, use key0 only
       } else if (!(key1a in temp_diffs)) {
         // Use key0 and key1b
         key1 = key1b;
@@ -367,10 +398,20 @@ class MyHoiaxDevice extends OAuth2Device {
         key1 = key1a;
       } else if (temp_diffs[key1a] >= temp_diffs[key1b]) {
         // Use key0 and key1a as it is used next most (or has smallest leakage if equal)
-        key1 = key1a;
+        if (temp_diffs[key1a] > 2 * temp_diffs[key1b]) {
+          key1 = key1a;
+        } else {
+          this.log("Too much noise, falling back on old calculations")
+          key0 = undefined;
+        }
       } else {
         // Use key0 and key1b as it is used next most
-        key1 = key1b;
+        if (temp_diffs[key1b] > 2 * temp_diffs[key1a]) {
+          key1 = key1b;
+        } else {
+          this.log("Too much noise, falling back on old calculations")
+          key0 = undefined;
+        }
       }
     }
 
@@ -383,28 +424,33 @@ class MyHoiaxDevice extends OAuth2Device {
     if (key0 == undefined) {
       if (isNaN(this.currentLeakage) || this.currentLeakage == 0)
         return; // Only return if there is no old data
+      // Otherwise, keep leakageConstant unchanged
     } else {
       // Go through entire log and calculate likely leaked temperature for the two selected keys only
-      let temp_drop_count = temp_diffs[key0] + temp_diffs[key1];
+      let temp_drop_count = temp_diffs[key0] + ((key1 == undefined) ? 0 : temp_diffs[key1]);
       let temp_drop_val   = 0;
       for (let idx = 0; idx < this.pastLeakage.length; idx++) {
-        if ((this.pastLeakage[idx].tempDiff == key0) || (this.pastLeakage[idx].tempDiff == key1)) {
-          temp_drop_val += -this.pastLeakage[idx].tempDiff * 1000000. / (this.pastLeakage[idx].outerTempDiff * this.pastLeakage[idx].timeDiff);
+        if ((this.pastLeakage[idx].tempDiff === key0) || (this.pastLeakage[idx].tempDiff === key1)) {
+          temp_drop_val -= this.pastLeakage[idx].tempDiff * 1000000. / (this.pastLeakage[idx].outerTempDiff * this.pastLeakage[idx].timeDiff);
         }
       }
 
-      let average_temp_drop = (temp_drop_val * this.pastLeakage[0].outerTempDiff) / temp_drop_count;
-      let loss_effect = 4.187 * average_temp_drop * this.tankVolume; // W
-      this.currentLeakage = loss_effect;
+      // Smooth out changes to the leakage constant so it is less prone to errors
+      let new_leakageConstant = (4.187 * temp_drop_val * this.tankVolume) / temp_drop_count;
+      this.leakageConstant = (0.99 * this.leakageConstant) + (0.01 * new_leakageConstant);
     }
+
+    this.log("Leakage constant:" + String(this.leakageConstant))
 
     let accum_time_diff = new_time - this.prevAccumTime
     this.prevAccumTime = new_time;
-    this.accumulatedLeakage += this.currentLeakage * accum_time_diff / (60*60*1000000);
+    this.currentLeakage = this.leakageConstant * outerTempDiff; // W
+    this.accumulatedLeakage += this.currentLeakage * accum_time_diff / (60*60*1000000); // kWh
 
     // Update stores
     this.setStoreValue("prevAccumTime", this.prevAccumTime).catch(this.error);
     this.setStoreValue("currentLeakage", this.currentLeakage).catch(this.error);
+    this.setStoreValue("leakageConstant", this.leakageConstant).catch(this.error);
     this.setStoreValue("accumulatedLeakage", this.accumulatedLeakage).catch(this.error);
     // Update statistics
     this.setCapabilityValue('measure_power.leak', this.currentLeakage);

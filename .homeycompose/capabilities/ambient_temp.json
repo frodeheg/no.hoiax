@@ -1,0 +1,17 @@
+{
+    "type": "number",
+    "title": {
+        "en": "Ambient temperature",
+        "no": "Romtemperatur"
+    },
+    "getable": false,
+    "setable": true,
+    "uiComponent": null,
+    "units": {
+        "en": "°C",
+        "no": "°C"
+    },
+    "min": 0,
+    "max": 40,
+    "step": 0.1
+}

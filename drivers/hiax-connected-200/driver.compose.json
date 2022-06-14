@@ -14,7 +14,8 @@
     "target_temperature",
     "measure_temperature",
     "onoff",
-    "measure_humidity.fill_level"
+    "measure_humidity.fill_level",
+    "ambient_temp"
   ],
   "capabilitiesOptions": {
     "meter_power.accumulated": {

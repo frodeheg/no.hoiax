@@ -55,6 +55,32 @@
             "name": "max_power"
             }
         ]
+    },
+    {
+      "id": "change-ambient-temp",
+      "highlight": true,
+      "title": {
+          "en": "Let the tank know the room temperature",
+          "no": "La tanken få vite romtemperaturen"
+      },
+      "titleFormatted": {
+          "en": "Change the room temperature to [[ambient_temp]]",
+          "no": "Endre romtemperaturen til [[ambient_temp]]"
+      },
+      "hint": {
+          "en": "By letting the tank know the room temperature, the estimated parameters will be more accurate.",
+          "no": "Ved å sende romtemperaturen til tanken vil estimerte parametere bli mer nøyaktig."
+      },
+      "args": [
+          {
+          "type": "number",
+          "title": { "en": "Ambient temperature", "no": "Romtemperatur" },
+          "min": 0,
+          "max": 40,
+          "step": 0.1,
+          "name": "ambient_temp"
+          }
+      ]
     }
   ]
 }

@@ -101,6 +101,30 @@ class MyHoiaxDevice extends OAuth2Device {
     this.deviceId = this.getData().deviceId
     this.intervalID = undefined
 
+    // Capability update from version 1.3.3
+    if (!this.hasCapability("meter_power.leak_accum")) {
+      await this.addCapability("meter_power.leak_accum");
+    }
+    if (!this.hasCapability("measure_power.leak")) {
+      await this.addCapability("measure_power.leak");
+    }
+
+    // Initial state for leakage heat
+    this.prevPower = undefined;
+    this.prevTemp  = undefined;
+    this.prevStored= undefined;
+    this.prevTime  = undefined;
+    this.pastLeakage = [];
+    this.prevAccumTime = this.getStoreValue("prevAccumTime");
+    this.currentLeakage = this.getStoreValue("currentLeakage");
+    this.accumulatedLeakage = this.getStoreValue("accumulatedLeakage");
+    if (this.prevAccumTime == undefined) this.prevAccumTime = new Date();
+    if (this.currentLeakage == undefined) this.currentLeakage = 0;
+    if (this.accumulatedLeakage == undefined) this.accumulatedLeakage = 0;
+
+    this.outsideTemp = 24;  // Should be updated by flow (in the future)
+    this.tankVolume  = 178; // Updated by settings
+
     // Make sure that the Heater mode is controllable - set to External mode
     let heater_mode = undefined
     while (heater_mode == undefined) {
@@ -155,6 +179,9 @@ class MyHoiaxDevice extends OAuth2Device {
         if ('parameterId' in state_request[val]) {
           if (state_request[val].writable == false) {
             internal_states[reverse_key_map[state_request[val].parameterId]] = state_request[val].strVal; // Value with unit
+            if (parseInt(state_request[val].parameterId) == 526) {
+              this.tankVolume = parseInt(state_request[val].value);
+            }
           } else {
             internal_states[reverse_key_map[state_request[val].parameterId]] = state_request[val].value; // Value without unit
           }
@@ -235,6 +262,155 @@ class MyHoiaxDevice extends OAuth2Device {
     }
   }
 
+
+  // Calculate leakage heat and update the stores
+  // Leakage is calculated from a series of measurements where the following are ignored:
+  // * There was power usage since last time or
+  // * The temperature increased in the tank
+  // * The largest 50% of the entries are ignored as possibly being affected by tapped water
+  //   (tank experience higher temperature fluctuations up to 20 minutes after water being tapped)
+  // * The lowest 25% of the entries are ignored as possibly being affected by previous cycle heating
+  // From the remaining 25% the leakage is calculated as an average.
+  async logLeakage(total_usage, temperature, in_tank, debug_time = undefined) {
+    this.log("logLeakage(" + String(total_usage) + ", " + String(temperature) + ", " + String(in_tank) + ", " + String((new Date()).getTime()) + ");");
+    let LOGITEMS = 200; // Maximum logged items (higher number improves estimation, 12=one hour)
+    let new_time = isNaN(debug_time) ? new Date() : debug_time;
+    // Make sure input is valid
+    if (isNaN(total_usage) || isNaN(temperature) || isNaN(in_tank)) {
+        throw("Invalid values read from water heater");
+    }
+    // If first time set state and exit
+    if (this.prevPower == undefined || this.prevTemp == undefined || this.prevStored == undefined) {
+      this.prevPower  = total_usage;
+      this.prevTemp   = temperature;
+      this.prevStored = in_tank;
+      this.prevTime   = new_time;
+      return
+    }
+    // Calculate diff from last time
+    var powDiff   = total_usage - this.prevPower;
+    var tempDiff  = temperature - this.prevTemp;
+    var storeDiff = in_tank     - this.prevStored; // diff in kWh
+    var timeDiff  = new_time    - this.prevTime;   // diff in ms
+    var outerTempDiff = in_tank - this.outsideTemp;
+    this.prevPower = total_usage;
+    this.prevTemp  = temperature;
+    this.prevStored= in_tank;
+    this.prevTime  = new_time;
+    let prevData = {
+      powDiff: powDiff.toFixed(1),
+      tempDiff: tempDiff.toFixed(1),
+      timeDiff: timeDiff,
+      storeDiff: storeDiff.toFixed(2),
+      outerTempDiff: outerTempDiff.toFixed(1)
+    };
+    for (let idx = LOGITEMS-1; idx > 0; idx--) {
+      if (this.pastLeakage[idx-1] != undefined)
+        this.pastLeakage[idx] = this.pastLeakage[idx-1];
+    }
+    this.pastLeakage[0] = prevData;
+
+    // Heat can only be measured with a single decimal point, so in order to find the leakage temperature
+    // the following assumptions are made:
+    // *) Average leakage will lie between the two most common temp diffs and averaging those
+    // *) It is random when tank is being heated disregarding intervals with heating will not add a bias
+    // *) It is random when water is being tapped so including it in the intervals will not affect the
+    //    two most used intervals unless water is tapped by excessive ammounts.
+    // *) If there is a constant leakage it will move the intervals so it will show as a heat leakage,
+    //    which is ok.
+
+    // Find temp-diff normal distribution:
+    let temp_diffs = {};
+    let include_count = 0;
+    for (let idx = 0; idx < this.pastLeakage.length; idx++) {
+      if ((this.pastLeakage[idx].powDiff == 0) && (this.pastLeakage[idx].tempDiff <= 0)) {
+        include_count++;
+        if (this.pastLeakage[idx].tempDiff in temp_diffs) {
+          temp_diffs[this.pastLeakage[idx].tempDiff]++;
+        } else {
+          temp_diffs[this.pastLeakage[idx].tempDiff] = 1;
+        }
+      }
+    }
+
+    // Do not continue before sufficient data has been logged
+    if (include_count < 12) {
+      this.log("Skip calculating leakage - more data is needed");
+      return;
+    }
+    
+    var keys = Object.keys(temp_diffs);
+    var sortedKeys = keys.sort(function(a,b){return temp_diffs[b]-temp_diffs[a]});
+    // sortedKeys[0] should always be included, but sortedKeys[1] may not be if it is not next to it,
+    var key0 = sortedKeys[0];
+    var key1 = undefined;
+    if ((sortedKeys.length>1) && (Math.abs(parseInt(sortedKeys[1]*10) - parseInt(sortedKeys[0]*10)) != 1)) {
+      if (temp_diffs[sortedKeys[0]] < 3 * temp_diffs[sortedKeys[1]]) {
+        // If  key 1 is not next to key 0 and there is a small difference then the signal to noise ratio is too big.
+        // Too noisy
+        this.log("Too noisy to use the data, fall back on old calculations");
+        key0 = undefined;
+      }
+    } else {
+      // Find second key to use
+      var key1a = parseFloat(key0) - 0.1;
+      var key1b = parseFloat(key0) + 0.1;
+      key1a = key1a.toFixed(1);
+      key1b = key1b.toFixed(1);
+      if (!(key1a in temp_diffs || key1b in temp_diffs)) {
+        // Use key0 only
+      } else if (!(key1a in temp_diffs)) {
+        // Use key0 and key1b
+        key1 = key1b;
+      } else if (!(key1b in temp_diffs)) {
+        // Use key0 and key1a
+        key1 = key1a;
+      } else if (temp_diffs[key1a] >= temp_diffs[key1b]) {
+        // Use key0 and key1a as it is used next most (or has smallest leakage if equal)
+        key1 = key1a;
+      } else {
+        // Use key0 and key1b as it is used next most
+        key1 = key1b;
+      }
+    }
+
+    // Heat transfer from the tank is linear with the temperature difference:
+    // loss = k * (T_tank - T_outside) * t
+    //      k : a constant for the tank
+    // The loss should be equivalent to (4.187 * temp_loss * tank_litres / 3600)
+
+    // Calculate leakage from temperature drop over time:
+    if (key0 == undefined) {
+      if (isNaN(this.currentLeakage) || this.currentLeakage == 0)
+        return; // Only return if there is no old data
+    } else {
+      // Go through entire log and calculate likely leaked temperature for the two selected keys only
+      let temp_drop_count = temp_diffs[key0] + temp_diffs[key1];
+      let temp_drop_val   = 0;
+      for (let idx = 0; idx < this.pastLeakage.length; idx++) {
+        if ((this.pastLeakage[idx].tempDiff == key0) || (this.pastLeakage[idx].tempDiff == key1)) {
+          temp_drop_val += -this.pastLeakage[idx].tempDiff * 1000000. / (this.pastLeakage[idx].outerTempDiff * this.pastLeakage[idx].timeDiff);
+        }
+      }
+
+      let average_temp_drop = (temp_drop_val * this.pastLeakage[0].outerTempDiff) / temp_drop_count;
+      let loss_effect = 4.187 * average_temp_drop * this.tankVolume; // W
+      this.currentLeakage = loss_effect;
+    }
+
+    let accum_time_diff = new_time - this.prevAccumTime
+    this.prevAccumTime = new_time;
+    this.accumulatedLeakage += this.currentLeakage * accum_time_diff / (60*60*1000000);
+
+    // Update stores
+    this.setStoreValue("prevAccumTime", this.prevAccumTime).catch(this.error);
+    this.setStoreValue("currentLeakage", this.currentLeakage).catch(this.error);
+    this.setStoreValue("accumulatedLeakage", this.accumulatedLeakage).catch(this.error);
+    // Update statistics
+    this.setCapabilityValue('measure_power.leak', this.currentLeakage);
+    this.setCapabilityValue('meter_power.leak_accum', this.accumulatedLeakage);
+  }
+
   async onSettings({ oldSettings, newSettings, changedKeys }) {
     this.log("Settings changed")
 
@@ -268,37 +444,53 @@ class MyHoiaxDevice extends OAuth2Device {
         await sleep(retryOnErrorWaitTime)
       }
     }
-    //this.setCapabilityValue('measure_humidity.efficiency', dev_points[4].value) //405 = HeaterEfficiency
-    if ("value" in dev_points[0]) { // 302 = EnergyStored
-      this.setCapabilityValue('meter_power.in_tank', dev_points[0].value)
+    let log_total, log_temp, log_stored;
+    for (let loop = 0; loop < dev_points.length; loop++) {
+      if ("parameterId" in dev_points[loop] && "value" in dev_points[loop]) {
+        switch(parseInt(dev_points[loop].parameterId)) {
+          case 405: // 405 = HeaterEfficiency (deprecated)
+            //this.setCapabilityValue('measure_humidity.efficiency', dev_points[loop].value)
+            break;
+          case 302: // 302 = EnergyStored
+            this.setCapabilityValue('meter_power.in_tank', dev_points[loop].value);
+            log_stored = dev_points[loop].value;
+            break;
+          case 303: // 303 = EnergyTotal
+            this.setCapabilityValue('meter_power.accumulated', dev_points[loop].value);
+            log_total = dev_points[loop].value;
+            break;
+          case 400: // 400 = EstimatedPower
+            this.setCapabilityValue('measure_power', dev_points[loop].value);
+            break;
+          case 404: //404 = FillLevel
+            this.setCapabilityValue('measure_humidity.fill_level', dev_points[loop].value);
+            break;
+          case 517: // 517 = Requested power
+            let current_max_power = dev_points[loop].value
+            // Value 0 = Off, 1 = 700W, 2 = 1300W, 3 = 2000W
+            if (current_max_power == 0) {
+              // Heater is off
+              this.is_on     = false
+            } else {
+              this.is_on     = true
+              this.max_power = current_max_power
+            }
+            this.setHeaterState(deviceId, this.is_on, this.max_power);
+            break;
+          case 527: // 527 = Requested temperature
+            this.setCapabilityValue('target_temperature', dev_points[loop].value);
+            break;
+          case 528: // 528 = Measured temperature
+            this.setCapabilityValue('measure_temperature', dev_points[loop].value);
+            log_temp = dev_points[loop].value;
+            break;
+          default:
+            this.log("Device point parameterId " + String(dev_points[loop].parameterId) + " not handled")
+            break;
+        }
+      } // Else parameterId not set.... this is only the case when internet connection is bad
     }
-    if ("value" in dev_points[1]) { // 303 = EnergyTotal
-      this.setCapabilityValue('meter_power.accumulated', dev_points[1].value)
-    }
-    if ("value" in dev_points[2]) { // 400 = EstimatedPower
-      this.setCapabilityValue('measure_power', dev_points[2].value)
-    }
-    if ("value" in dev_points[3]) { //404 = FillLevel
-      this.setCapabilityValue('measure_humidity.fill_level', dev_points[3].value)
-    }
-    if ("value" in dev_points[4]) { // 517 = Requested power
-      let current_max_power = dev_points[4].value
-      // Value 0 = Off, 1 = 700W, 2 = 1300W, 3 = 2000W
-      if (current_max_power == 0) {
-        // Heater is off
-        this.is_on     = false
-      } else {
-        this.is_on     = true
-        this.max_power = current_max_power
-      }
-      this.setHeaterState(deviceId, this.is_on, this.max_power)
-    }
-    if ("value" in dev_points[5]) { // 527 = Requested temperature
-      this.setCapabilityValue('target_temperature', dev_points[5].value)
-    }
-    if ("value" in dev_points[6]) { // 528 = Measured temperature
-      this.setCapabilityValue('measure_temperature', dev_points[6].value)
-    }
+    this.logLeakage(log_total, log_temp, log_stored)
     this.setAvailable() // In case it was set to unavailable
   }
 

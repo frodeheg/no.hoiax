@@ -142,8 +142,10 @@
       "capabilities": [
         "max_power",
         "meter_power.accumulated",
+        "meter_power.leak_accum",
         "meter_power.in_tank",
         "measure_power",
+        "measure_power.leak",
         "target_temperature",
         "measure_temperature",
         "onoff",
@@ -156,10 +158,22 @@
             "no": "Totalt forbruk"
           }
         },
+        "meter_power.leak_accum": {
+          "title": {
+            "en": "Total heat leakage",
+            "no": "Akkumulert varmetap"
+          }
+        },
         "meter_power.in_tank": {
           "title": {
             "en": "Energy in tank",
             "no": "I tanken"
+          }
+        },
+        "measure_power.leak": {
+          "title": {
+            "en": "Heat leakage",
+            "no": "Varmetap"
           }
         },
         "target_temperature": {

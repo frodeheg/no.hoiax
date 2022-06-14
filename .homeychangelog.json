@@ -46,5 +46,8 @@
   },
   "1.4.0": {
     "en": "Added new capability for reporting leakage heat + minor stability improvement"
+  },
+  "1.4.1": {
+    "en": "Added capability to set ambient temperature + Fixed Energy leakage calculation."
   }
 }

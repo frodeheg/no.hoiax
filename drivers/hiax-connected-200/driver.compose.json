@@ -15,6 +15,7 @@
     "measure_temperature",
     "onoff",
     "measure_humidity.fill_level",
+    "measure_humidity.leak_relation",
     "ambient_temp"
   ],
   "capabilitiesOptions": {
@@ -51,6 +52,12 @@
       "title": {
         "en": "Fill level",
         "no": "Fyllingsgrad"
+      }
+    },
+    "measure_humidity.leak_relation": {
+      "title": {
+        "en": "Energy leaked yesterday",
+        "no": "Tapt energi i går"
       }
     }
   },

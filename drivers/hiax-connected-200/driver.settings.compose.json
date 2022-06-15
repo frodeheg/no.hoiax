@@ -14,8 +14,8 @@
           "no": "Gjennomsnittlig romtemperatur"
         },
         "hint": {
-          "en": "Used internally when calculating energy in tank",
-          "no": "Brukes internt for å regne ut energien i tanken"
+          "en": "Used internally when calculating energy in tank. If you have a temperature sensor in the room it is reccomended to use a flow to forward this to the tank for improved accuracy.",
+          "no": "Brukes internt for å regne ut energien i tanken. Hvis du har en temperatursensor i rommet er det anbefalt å opprette en flow som videresender denne til tanken for økt nøyaktighet."
         },
         "value": 0,
         "min": 10,
@@ -217,6 +217,19 @@
         "hint": {
           "en": "The nominal power for heating element 2.",
           "no": "Den nominelle styrken til varmeelement 2."
+        }
+      },
+      {
+        "id": "LeakageConstant",
+        "type": "label",
+        "label": {
+          "en": "Leakage constant",
+          "no": "Lekkasjekonstant"
+        },
+        "value": "???",
+        "hint": {
+          "en": "Number of Watts leaked to the environment per degree C temperature difference between the outside and the inside of the tank. If this is very different from 11 then it is likely that the ambient temperature is not reported to the tank (please set up a flow for this), otherwise it could be an issue with the insulation of the tank.",
+          "no": "Antall Watt lekkasjevarme til omgivelsene per grad C temperaturforskjell mellom utsiden og innsiden av tanken. Dersom denne er veldig ulik fra 11 er det sannsynlig at romtemperaturen ikke blir rapportert korrekt til tanken (vennligst legg til en flow for dette), ellers kan det være en feil med isoleringen av tanken."
         }
       },
       {

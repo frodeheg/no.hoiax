@@ -105,6 +105,7 @@ class MyHoiaxDevice extends OAuth2Device {
     to_settings.SerialNo          = String(to_settings.SerialNo) // Also in this.getData().deviceId
     to_settings.HeaterNomPower    = String(to_settings.HeaterNomPower)
     to_settings.HeaterNomPower2   = String(to_settings.HeaterNomPower2)
+    to_settings.LeakageConstant   = String(this.leakageConstant) + " W/Δ°C"
     to_settings.systemId          = String(this.getData().systemId)
     to_settings.systemName        = String(this.getData().systemName)
     to_settings.deviceId          = String(this.getData().deviceId)
@@ -129,20 +130,24 @@ class MyHoiaxDevice extends OAuth2Device {
     if (!this.hasCapability("measure_power.leak")) {
       await this.addCapability("measure_power.leak");
     }
+    if (!this.hasCapability("measure_humidity.leak_relation")) {
+      await this.addCapability("measure_humidity.leak_relation");
+    }
 
     // Initial state for leakage heat
     this.prevPower = undefined;
     this.prevTemp  = undefined;
     this.prevStored= undefined;
     this.prevTime  = undefined;
+    this.prevRelationTime = undefined;
+    this.prevRelationUse  = undefined;
+    this.prevRelationLeak = undefined;
     this.pastLeakage = [];
     this.prevAccumTime = this.getStoreValue("prevAccumTime");
-    this.currentLeakage = this.getStoreValue("currentLeakage");
     this.leakageConstant = this.getStoreValue("leakageConstant");
     this.accumulatedLeakage = this.getStoreValue("accumulatedLeakage");
     if (this.prevAccumTime == undefined) this.prevAccumTime = new Date();
-    if (this.currentLeakage == undefined) this.currentLeakage = 0;
-    if (this.leakageConstant == undefined) this.leakageConstant = 12.696;
+    if (this.leakageConstant == undefined) this.leakageConstant = 10.868769703300554;//12.23512500108273;//12.696;
     if (this.accumulatedLeakage == undefined) this.accumulatedLeakage = 0;
 
     this.outsideTemp = 24;  // Updated by a flow if set up
@@ -422,9 +427,8 @@ class MyHoiaxDevice extends OAuth2Device {
 
     // Calculate leakage from temperature drop over time:
     if (key0 == undefined) {
-      if (isNaN(this.currentLeakage) || this.currentLeakage == 0)
-        return; // Only return if there is no old data
       // Otherwise, keep leakageConstant unchanged
+      this.log("Using old leakage constant:" + String(this.leakageConstant))
     } else {
       // Go through entire log and calculate likely leaked temperature for the two selected keys only
       let temp_drop_count = temp_diffs[key0] + ((key1 == undefined) ? 0 : temp_diffs[key1]);
@@ -438,22 +442,39 @@ class MyHoiaxDevice extends OAuth2Device {
       // Smooth out changes to the leakage constant so it is less prone to errors
       let new_leakageConstant = (4.187 * temp_drop_val * this.tankVolume) / temp_drop_count;
       this.leakageConstant = (0.99 * this.leakageConstant) + (0.01 * new_leakageConstant);
+      this.log("Leakage constant:" + String(this.leakageConstant) + " (new: " + String(new_leakageConstant) + ")")
     }
-
-    this.log("Leakage constant:" + String(this.leakageConstant))
 
     let accum_time_diff = new_time - this.prevAccumTime
     this.prevAccumTime = new_time;
-    this.currentLeakage = this.leakageConstant * outerTempDiff; // W
-    this.accumulatedLeakage += this.currentLeakage * accum_time_diff / (60*60*1000000); // kWh
+    let currentLeakage = this.leakageConstant * outerTempDiff; // W
+    this.accumulatedLeakage += currentLeakage * accum_time_diff / (60*60*1000000); // kWh
+
+    // Check relations
+    if (this.prevRelationTime == undefined) {
+      this.prevRelationTime = new_time;
+      this.prevRelationUse  = total_usage;
+      this.prevRelationLeak = this.accumulatedLeakage;
+    } else if ((new_time - this.prevRelationTime) > 24*60*60*1000) {
+      // Once every day
+      this.prevRelationTime = new_time;
+      let leaked_energy = this.accumulatedLeakage - this.prevRelationLeak;
+      let added_energy  = total_usage - this.prevRelationUse;
+      this.prevRelationUse  = total_usage;
+      this.prevRelationLeak = this.accumulatedLeakage;
+      let leak_relation = (added_energy > leaked_energy) ? (100 * leaked_energy / added_energy) : 100;
+      this.setCapabilityValue('measure_humidity.leak_relation', leak_relation);
+      this.log("Relation: " + String(leaked_energy) + " " + String(added_energy) + "  " + String(leak_relation))
+    } else {
+      this.log("Time lapsed since last leak_check:" + String((new_time - this.prevRelationTime) / (1000*60*60)) + " hours")
+    }
 
     // Update stores
     this.setStoreValue("prevAccumTime", this.prevAccumTime).catch(this.error);
-    this.setStoreValue("currentLeakage", this.currentLeakage).catch(this.error);
     this.setStoreValue("leakageConstant", this.leakageConstant).catch(this.error);
     this.setStoreValue("accumulatedLeakage", this.accumulatedLeakage).catch(this.error);
     // Update statistics
-    this.setCapabilityValue('measure_power.leak', this.currentLeakage);
+    this.setCapabilityValue('measure_power.leak', currentLeakage);
     this.setCapabilityValue('meter_power.leak_accum', this.accumulatedLeakage);
   }
 

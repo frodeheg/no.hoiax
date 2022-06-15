@@ -52,5 +52,8 @@
   },
   "1.4.2": {
     "en": "Added capability to read amount of wasted energy due to leakage + added action card to set ambient temperature for improved accuracy."
+  },
+  "1.4.3": {
+    "en": "Fixed some norwegian translations"
   }
 }

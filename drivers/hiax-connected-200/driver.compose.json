@@ -57,7 +57,7 @@
     "measure_humidity.leak_relation": {
       "title": {
         "en": "Energy leaked yesterday",
-        "no": "Tapt energi i går"
+        "no": "Andel strømbruk tapt i går"
       }
     }
   },

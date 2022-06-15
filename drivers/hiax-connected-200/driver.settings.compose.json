@@ -198,12 +198,12 @@
         "type": "label",
         "label": {
           "en": "Nominal power element 1",
-          "no": "Nominell power element 1"
+          "no": "Nominell effekt element 1"
         },
         "value": "???",
         "hint": {
           "en": "The nominal power for heating element 1.",
-          "no": "Den nominelle styrken til varmeelement 1."
+          "no": "Den nominelle effekten til varmeelement 1."
         }
       },
       {
@@ -211,12 +211,12 @@
         "type": "label",
         "label": {
           "en": "Nominal power element 2",
-          "no": "Nominell power element 2"
+          "no": "Nominell effekt element 2"
         },
         "value": "???",
         "hint": {
           "en": "The nominal power for heating element 2.",
-          "no": "Den nominelle styrken til varmeelement 2."
+          "no": "Den nominelle effekten til varmeelement 2."
         }
       },
       {

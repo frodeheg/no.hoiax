@@ -75,7 +75,8 @@ class MyHoiaxDevice extends OAuth2Device {
     if (isNaN(ambient_temp)) {
       return;
     }
-    this.log("New ambient temperature:" + String(ambient_temp))
+    //this.log("New ambient temperature:" + String(ambient_temp))
+    this.setSettings({ "ambient_temperature": ambient_temp })
     this.outsideTemp = ambient_temp;
     let key_change = {}
     key_change[key_map['ambient_temperature']] = this.outsideTemp;
@@ -97,7 +98,7 @@ class MyHoiaxDevice extends OAuth2Device {
   /**
    * Override the setSettings function to make sure the settings are of right type
    */
-  async setSettings(new_settings) {
+  async toSettings(new_settings) {
     let to_settings = clone(new_settings)
 
     to_settings.controling_device = String(to_settings.controling_device)
@@ -135,20 +136,21 @@ class MyHoiaxDevice extends OAuth2Device {
     }
 
     // Initial state for leakage heat
-    this.prevPower = undefined;
+/*    this.prevPower = undefined;
     this.prevTemp  = undefined;
     this.prevStored= undefined;
     this.prevTime  = undefined;
+    this.pastLeakage = [];*/
     this.prevRelationTime = undefined;
     this.prevRelationUse  = undefined;
     this.prevRelationLeak = undefined;
-    this.pastLeakage = [];
     this.prevAccumTime = this.getStoreValue("prevAccumTime");
     this.leakageConstant = this.getStoreValue("leakageConstant");
     this.accumulatedLeakage = this.getStoreValue("accumulatedLeakage");
     if (this.prevAccumTime == undefined) this.prevAccumTime = new Date();
-    if (this.leakageConstant == undefined) this.leakageConstant = 10.868769703300554;//12.23512500108273;//12.696;
+    if (this.leakageConstant == undefined) this.leakageConstant = 6; // appears to be 6 from graph but 4 from usage???
     if (this.accumulatedLeakage == undefined) this.accumulatedLeakage = 0;
+    this.leakageConstant = 4;
 
     this.outsideTemp = 24;  // Updated by a flow if set up
     this.tankVolume  = 178; // Updated by settings
@@ -224,11 +226,11 @@ class MyHoiaxDevice extends OAuth2Device {
     }
 
     try {
-      await this.setSettings(internal_states);
+      await this.toSettings(internal_states);
     }
     catch(err) {
       // This should never happen so nothing to handle here, throw error instead
-      throw new Error("setSettings failed, report to developer. This need to be fixed: " + err)
+      throw new Error("toSettings failed, report to developer. This need to be fixed: " + err)
     }
 
     // Update internal state every 5 minute:
@@ -309,14 +311,16 @@ class MyHoiaxDevice extends OAuth2Device {
   //   (tank experience higher temperature fluctuations up to 20 minutes after water being tapped)
   // * The lowest 25% of the entries are ignored as possibly being affected by previous cycle heating
   // From the remaining 25% the leakage is calculated as an average.
+  // A good description of leakage heat is here:
+  // https://vannbaserte.nemitek.no/833-artikkel-vannbaserte-oppvarmings-og-kjolesystemer-2014/beredertemperatur-og-varmetap/163668
   async logLeakage(total_usage, temperature, in_tank, debug_time = undefined) {
     this.log("logLeakage(" + String(total_usage) + ", " + String(temperature) + ", " + String(in_tank) + ", " + String((new Date()).getTime()) + ");");
-    let LOGITEMS = 200; // Maximum logged items (higher number improves estimation, 12=one hour)
     let new_time = isNaN(debug_time) ? new Date() : debug_time;
     // Make sure input is valid
     if (isNaN(total_usage) || isNaN(temperature) || isNaN(in_tank)) {
         throw("Invalid values read from water heater");
     }
+/*    let LOGITEMS = 200; // Maximum logged items (higher number improves estimation, 12=one hour)
     // If first time set state and exit
     if (this.prevPower == undefined || this.prevTemp == undefined || this.prevStored == undefined) {
       this.prevPower  = total_usage;
@@ -330,8 +334,8 @@ class MyHoiaxDevice extends OAuth2Device {
     var tempDiff  = temperature - this.prevTemp;
     var storeDiff = in_tank     - this.prevStored; // diff in kWh
     var timeDiff  = new_time    - this.prevTime;   // diff in ms
-    var outerTempDiff = temperature - this.outsideTemp;
-    this.prevPower = total_usage;
+*/    var outerTempDiff = temperature - this.outsideTemp;
+/*    this.prevPower = total_usage;
     this.prevTemp  = temperature;
     this.prevStored= in_tank;
     this.prevTime  = new_time;
@@ -443,8 +447,13 @@ class MyHoiaxDevice extends OAuth2Device {
       let new_leakageConstant = (4.187 * temp_drop_val * this.tankVolume) / temp_drop_count;
       this.leakageConstant = (0.99 * this.leakageConstant) + (0.01 * new_leakageConstant);
       this.log("Leakage constant:" + String(this.leakageConstant) + " (new: " + String(new_leakageConstant) + ")")
-    }
 
+      let changed_settings = { "LeakageConstant": String(this.leakageConstant) + " W/Δ°C" }
+      this.log("---- changed settings:")
+      this.log(changed_settings)
+      this.setSettings(changed_settings)
+    }
+*/
     let accum_time_diff = new_time - this.prevAccumTime
     this.prevAccumTime = new_time;
     let currentLeakage = this.leakageConstant * outerTempDiff; // W

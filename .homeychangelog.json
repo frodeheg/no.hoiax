@@ -58,5 +58,8 @@
   },
   "1.4.4": {
     "en": "Removed calculation of leakage constant and set it to a low value, will replace with a more accurate measured value when possible."
+  },
+  "1.4.5": {
+    "en": "Leakage heat has been measured over 3 days to give an accurate representation"
   }
 }

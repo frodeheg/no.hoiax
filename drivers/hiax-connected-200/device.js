@@ -455,10 +455,11 @@ class MyHoiaxDevice extends OAuth2Device {
     }
 */
     let accum_time_diff = new_time - this.prevAccumTime
-    let currentLeakage = this.leakageConstant * outerTempDiff * accum_time_diff / (60*60*1000000); // kWh
-    if (!isNaN(currentLeakage)) {
+    let currentLeakage = this.leakageConstant * outerTempDiff; // W
+    let timedLeakage = currentLeakage * accum_time_diff / (60*60*1000000); // kWh
+    if (!isNaN(timedLeakage)) {
       this.prevAccumTime = new_time;
-      this.accumulatedLeakage += currentLeakage; 
+      this.accumulatedLeakage += timedLeakage; 
       // Update statistics
       this.setCapabilityValue('measure_power.leak', currentLeakage);
       this.setCapabilityValue('meter_power.leak_accum', this.accumulatedLeakage);

@@ -455,9 +455,18 @@ class MyHoiaxDevice extends OAuth2Device {
     }
 */
     let accum_time_diff = new_time - this.prevAccumTime
-    this.prevAccumTime = new_time;
-    let currentLeakage = this.leakageConstant * outerTempDiff; // W
-    this.accumulatedLeakage += currentLeakage * accum_time_diff / (60*60*1000000); // kWh
+    let currentLeakage = this.leakageConstant * outerTempDiff * accum_time_diff / (60*60*1000000); // kWh
+    if (!isNaN(currentLeakage)) {
+      this.prevAccumTime = new_time;
+      this.accumulatedLeakage += currentLeakage; 
+      // Update statistics
+      this.setCapabilityValue('measure_power.leak', currentLeakage);
+      this.setCapabilityValue('meter_power.leak_accum', this.accumulatedLeakage);
+      // Update stores
+      this.setStoreValue("prevAccumTime", this.prevAccumTime).catch(this.error);
+      //this.setStoreValue("leakageConstant", this.leakageConstant).catch(this.error);
+      this.setStoreValue("accumulatedLeakage", this.accumulatedLeakage).catch(this.error);
+    }
 
     // Check relations
     if (this.prevRelationTime == undefined) {
@@ -477,14 +486,6 @@ class MyHoiaxDevice extends OAuth2Device {
     } else {
       this.log("Time lapsed since last leak_check:" + String((new_time - this.prevRelationTime) / (1000*60*60)) + " hours")
     }
-
-    // Update stores
-    this.setStoreValue("prevAccumTime", this.prevAccumTime).catch(this.error);
-    this.setStoreValue("leakageConstant", this.leakageConstant).catch(this.error);
-    this.setStoreValue("accumulatedLeakage", this.accumulatedLeakage).catch(this.error);
-    // Update statistics
-    this.setCapabilityValue('measure_power.leak', currentLeakage);
-    this.setCapabilityValue('meter_power.leak_accum', this.accumulatedLeakage);
   }
 
   async onSettings({ oldSettings, newSettings, changedKeys }) {

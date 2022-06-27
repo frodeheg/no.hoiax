@@ -228,8 +228,8 @@
         },
         "value": "???",
         "hint": {
-          "en": "Number of Watts leaked to the environment per degree C temperature difference between the outside and the inside of the tank. This is likely to be between 2 and 6.",
-          "no": "Antall Watt lekkasjevarme til omgivelsene per grad C temperaturforskjell mellom utsiden og innsiden av tanken. Det er sannsynlig at denne ligger mellom 2 og 6."
+          "en": "Number of Watts leaked to the environment per degree C temperature difference between the outside and the inside of the tank. This has been measured on a Connected 200 tank over 2 days after the internal pressure and temperature has had 1 day to stabilize at 85 degrees Celcius.",
+          "no": "Antall Watt lekkasjevarme til omgivelsene per grad C temperaturforskjell mellom utsiden og innsiden av tanken. Dette har blitt målt på en Connected 200 tank over 2 døgn etter at tanken har hatt 1 døgn på seg til å stabilisere trykk og temperatur på 85 grader Celcius."
         }
       },
       {

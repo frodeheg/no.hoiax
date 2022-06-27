@@ -148,9 +148,9 @@ class MyHoiaxDevice extends OAuth2Device {
     this.leakageConstant = this.getStoreValue("leakageConstant");
     this.accumulatedLeakage = this.getStoreValue("accumulatedLeakage");
     if (this.prevAccumTime == undefined) this.prevAccumTime = new Date();
-    if (this.leakageConstant == undefined) this.leakageConstant = 6; // appears to be 6 from graph but 4 from usage???
+    if (this.leakageConstant == undefined) this.leakageConstant = 1.58;
     if (this.accumulatedLeakage == undefined) this.accumulatedLeakage = 0;
-    this.leakageConstant = 4;
+    this.leakageConstant = 1.58; // Set it static here because those running debug versions have incorrect leakage
 
     this.outsideTemp = 24;  // Updated by a flow if set up
     this.tankVolume  = 178; // Updated by settings

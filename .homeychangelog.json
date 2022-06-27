@@ -61,5 +61,8 @@
   },
   "1.4.5": {
     "en": "Leakage heat has been measured over 3 days to give an accurate representation"
+  },
+  "1.4.6": {
+    "en": "Fixed bug displaying current leakage energy"
   }
 }

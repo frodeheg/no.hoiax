@@ -13,6 +13,11 @@ const key_map = {
   regulation_diff:      "516",
   legionella_frequency: "511",
   controling_device:    "500",
+  nordpool_price_region:"544",
+  num_expensive_hours:  "545",
+  min_remain_heat:      "546",
+  num_cheap_hours:      "547",
+  temp_inc_cheap_hours: "548",
   TankVolume:           "526",
   SerialNo:             "518",
   HeaterNomPower:       "503",
@@ -100,7 +105,11 @@ class MyHoiaxDevice extends OAuth2Device {
    */
   async toSettings(new_settings) {
     let to_settings = clone(new_settings)
-
+    to_settings.nordpool_price_region = String(to_settings.nordpool_price_region)
+    to_settings.num_expensive_hours = to_settings.num_expensive_hours
+    to_settings.min_remain_heat   = to_settings.min_remain_heat
+    to_settings.num_cheap_hours   = to_settings.num_cheap_hours
+    to_settings.temp_inc_cheap_hours = to_settings.temp_inc_cheap_hours
     to_settings.controling_device = String(to_settings.controling_device)
     to_settings.TankVolume        = String(to_settings.TankVolume)
     to_settings.SerialNo          = String(to_settings.SerialNo) // Also in this.getData().deviceId
@@ -154,6 +163,10 @@ class MyHoiaxDevice extends OAuth2Device {
 
     this.outsideTemp = 24;  // Updated by a flow if set up
     this.tankVolume  = 178; // Updated by settings
+
+    // === Debug code to show if new features has been added ===
+    // let all_features = await this.oAuth2Client.getDevicePoints(this.deviceId);
+    // this.log(JSON.stringify(all_features))
 
     // Make sure that the Heater mode is controllable - set to External mode
     let heater_mode = undefined

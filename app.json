@@ -392,6 +392,13 @@
                   }
                 },
                 {
+                  "id": "6",
+                  "label": {
+                    "en": "Self (Spot price)",
+                    "no": "Selvstendig (Spotpris)"
+                  }
+                },
+                {
                   "id": "7",
                   "label": {
                     "en": "Self (Schedule)",
@@ -421,8 +428,127 @@
                 }
               ],
               "hint": {
-                "en": "WARNING: This must be set to Homey in order for the App to function",
-                "no": "ADVARSEL: Hvis ikke denne er satt til Homey vil ikke appen fungere"
+                "en": "WARNING: Unless this value is set to Homey, this app will have to compete with myUplink to control the device. It's no way to say if we will win or not.",
+                "no": "ADVARSEL: Med mindre denne verdien er satt til Homey må denne appen sloss med myUplink om hvem som får styre enheten. Det er ingen måte å vite om vi vil vinne eller ikke."
+              }
+            }
+          ]
+        },
+        {
+          "type": "group",
+          "label": {
+            "en": "Spot price",
+            "no": "Spotpris"
+          },
+          "children": [
+            {
+              "id": "nordpool_price_region",
+              "type": "dropdown",
+              "value": "0",
+              "label": {
+                "en": "Nordpool price region",
+                "no": "Nordpool prisregion"
+              },
+              "values": [
+                {
+                  "id": "1",
+                  "label": {
+                    "en": "NO1 - Norway East",
+                    "no": "NO1 - Norge Øst"
+                  }
+                },
+                {
+                  "id": "2",
+                  "label": {
+                    "en": "NO2 - Norway South",
+                    "no": "NO2 - Norge Sør"
+                  }
+                },
+                {
+                  "id": "3",
+                  "label": {
+                    "en": "NO3 - Norway Middle",
+                    "no": "NO3 - Norge Midt"
+                  }
+                },
+                {
+                  "id": "4",
+                  "label": {
+                    "en": "NO4 - Norway North",
+                    "no": "NO4 - Norge Nord"
+                  }
+                },
+                {
+                  "id": "5",
+                  "label": {
+                    "en": "NO5 - Norway West",
+                    "no": "NO5 - Norge Vest"
+                  }
+                }
+              ],
+              "hint": {
+                "en": "The price region to which the tank should be adapted",
+                "no": "Prisregion som strømstyringen skal tilpasses"
+              }
+            },
+            {
+              "id": "num_expensive_hours",
+              "type": "number",
+              "label": {
+                "en": "Number of expensive hours per day",
+                "no": "Antall dyre timer per døgn"
+              },
+              "value": 6,
+              "min": 0,
+              "max": 18,
+              "units": {
+                "en": "hours",
+                "no": "timer"
+              }
+            },
+            {
+              "id": "min_remain_heat",
+              "type": "number",
+              "label": {
+                "en": "Minimum remaining heat in expensive hours",
+                "no": "Minimum restvarme i dyre timer"
+              },
+              "value": 50,
+              "min": 20,
+              "max": 100,
+              "units": {
+                "en": "%",
+                "no": "%"
+              }
+            },
+            {
+              "id": "num_cheap_hours",
+              "type": "number",
+              "label": {
+                "en": "Number of cheap hours per day",
+                "no": "Antall billige timer per døgn"
+              },
+              "value": 4,
+              "min": 0,
+              "max": 12,
+              "units": {
+                "en": "hours",
+                "no": "timer"
+              }
+            },
+            {
+              "id": "temp_inc_cheap_hours",
+              "type": "number",
+              "label": {
+                "en": "Setpoint increase in cheap hours",
+                "no": "Temperaturøkning i billige timer"
+              },
+              "value": 5,
+              "min": 0,
+              "max": 20,
+              "units": {
+                "en": "°C",
+                "no": "°C"
               }
             }
           ]

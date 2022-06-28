@@ -39,8 +39,8 @@
     },
     "measure_power.leak": {
       "title": {
-        "en": "Heat leakage",
-        "no": "Varmetap"
+        "en": "Passive heat leakage",
+        "no": "Passivt varmetap"
       }
     },
     "target_temperature": {

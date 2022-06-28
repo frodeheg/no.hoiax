@@ -64,5 +64,8 @@
   },
   "1.4.6": {
     "en": "Fixed bug displaying current leakage energy"
+  },
+  "1.4.7": {
+    "en": "Improved the description of heat loss to make it clear that the active component is not measured (yet)"
   }
 }

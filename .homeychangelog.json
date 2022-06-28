@@ -70,5 +70,8 @@
   },
   "1.5.0": {
     "en": "Added support for the built in spotpris controller in myUplink"
+  },
+  "1.5.1": {
+    "en": "Made sure the controlling device is not reset to 'Homey' for every new update of the app in case someone changed it to Spot price"
   }
 }

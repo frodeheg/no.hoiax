@@ -437,8 +437,8 @@
         {
           "type": "group",
           "label": {
-            "en": "Spot price",
-            "no": "Spotpris"
+            "en": "Spot price (Requires the controlling device to be set to 'Self (Spot price)')",
+            "no": "Spotpris (Krever at styringsenhet er satt til 'Selvstendig (Spotpris)')"
           },
           "children": [
             {

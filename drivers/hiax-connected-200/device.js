@@ -168,31 +168,36 @@ class MyHoiaxDevice extends OAuth2Device {
     // let all_features = await this.oAuth2Client.getDevicePoints(this.deviceId);
     // this.log(JSON.stringify(all_features))
 
-    // Make sure that the Heater mode is controllable - set to External mode
-    let heater_mode = undefined
-    while (heater_mode == undefined) {
-      try {
-        heater_mode = await this.oAuth2Client.getDevicePoints(this.deviceId, '500');
-      } catch(err) {
-        heater_mode = undefined
-        this.setUnavailable("Network problem: " + err)
-        await sleep(retryOnErrorWaitTime)
-      }
-    }
-    if (heater_mode[0] == undefined) {
-      // Given the while loop above this should not happen so throw error
-      throw new Error('Problems reading heater mode: ' + heater_mode.message);
-    } else if (heater_mode[0].value != 8) { // 8 == External
-      let res = undefined
-      while (res == undefined || res.ok == false) {
+    // Make sure that the Heater mode is controllable - set to External mode (but only if first time the app is run)
+    this.isFirstTime = this.getStoreValue("isFirstTime")
+    if (this.isFirstTime == undefined) {
+      let heater_mode = undefined
+      while (heater_mode == undefined) {
         try {
-          res = await this.oAuth2Client.setDevicePoint(this.deviceId, { '500': '8' });
-        }
-        catch(err) {
+          heater_mode = await this.oAuth2Client.getDevicePoints(this.deviceId, '500');
+        } catch(err) {
+          heater_mode = undefined
           this.setUnavailable("Network problem: " + err)
           await sleep(retryOnErrorWaitTime)
         }
       }
+      if (heater_mode[0] == undefined) {
+        // Given the while loop above this should not happen so throw error
+        throw new Error('Problems reading heater mode: ' + heater_mode.message);
+      } else if (heater_mode[0].value != 8) { // 8 == External
+        let res = undefined
+        while (res == undefined || res.ok == false) {
+          try {
+            res = await this.oAuth2Client.setDevicePoint(this.deviceId, { '500': '8' });
+          }
+          catch(err) {
+            this.setUnavailable("Network problem: " + err)
+            await sleep(retryOnErrorWaitTime)
+          }
+        }
+      }
+      this.isFirstTime = false
+      this.setStoreValue("isFirstTime", this.isFirstTime).catch(this.error);
     }
 
     // Set heater max power to 2000 W

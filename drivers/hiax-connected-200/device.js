@@ -2,8 +2,23 @@
 
 const { privateEncrypt } = require('crypto');
 const { OAuth2Device } = require('homey-oauth2app');
-const retryOnErrorWaitTime = 10000 // ms
+const retryOnErrorWaitTime = 10000; // ms
 
+// Connected 200 constants
+const CONNECTED_200_PROPERTIES = {
+  size: 187,
+  element1_power: 700,
+  element2_power: 1300,
+  leakage_constant: 1.58
+}
+
+// Connected 300 constants
+const CONNECTED_300_PROPERTIES = {
+  size: 283,
+  element1_power: 1250,
+  element2_power: 1750,
+  leakage_constant: undefined
+}
 
 // Mapping between settings and controller keys
 const key_map = {
@@ -44,7 +59,7 @@ class MyHoiaxDevice extends OAuth2Device {
 
   async setHeaterState(deviceId, turn_on, new_power) {
     // 1) Send commands to device
-    //    Value 0 = Off, 1 = 700W, 2 = 1300W, 3 = 2000W
+    //    Value 0 = Off, 1 = this.HeaterNomPower, 2 = this.HeaterNomPower2, 3 = this.HeaterNomPower+this.HeaterNomPower2
     let power = turn_on ? new_power : 0
     let onoff_response = undefined
     while (onoff_response == undefined || onoff_response.ok == false) {
@@ -59,8 +74,8 @@ class MyHoiaxDevice extends OAuth2Device {
     this.setAvailable() // In case it was set to unavailable
 
     // 2) Set capability states
-    let new_power_text = (new_power == 1) ? "low_power" : (new_power == 2) ? "medium_power" : "high_power"
-    let new_power_watt = (new_power == 1) ?         700 : (new_power == 2) ? 1300           : 2000
+    let new_power_text = (new_power == 1) ? "low_power"         : (new_power == 2) ? "medium_power"       : "high_power"
+    let new_power_watt = (new_power == 1) ? this.HeaterNomPower : (new_power == 2) ? this.HeaterNomPower2 : (this.HeaterNomPower + this.HeaterNomPower2)
     this.setCapabilityValue('onoff', turn_on).catch(this.error)
     this.setCapabilityValue('max_power', new_power_text).catch(this.error)
 
@@ -159,10 +174,19 @@ class MyHoiaxDevice extends OAuth2Device {
     if (this.prevAccumTime == undefined) this.prevAccumTime = new Date();
     if (this.leakageConstant == undefined) this.leakageConstant = 1.58;
     if (this.accumulatedLeakage == undefined) this.accumulatedLeakage = 0;
-    this.leakageConstant = 1.58; // Set it static here because those running debug versions have incorrect leakage
+    const device_properties = CONNECTED_200_PROPERTIES;
+    this.leakageConstant = device_properties.leakage_constant; // Set it static here because those running debug versions have incorrect leakage
+    if (this.leakageConstant == undefined) {
+      // In case the leakage constant has not been measured for a device, just scale a known one to have something until
+      // it is more accurate
+      this.leakageConstant = CONNECTED_200_PROPERTIES.leakage_constant * device_properties.size / CONNECTED_200_PROPERTIES.size;
+    }
 
-    this.outsideTemp = 24;  // Updated by a flow if set up
-    this.tankVolume  = 178; // Updated by settings
+    // Defaults for values fetched from myUplink in case myUplink is unavailable
+    this.outsideTemp     =   24; // Updated by a flow if set up
+    this.tankVolume      = device_properties.size;
+    this.HeaterNomPower  = device_properties.element1_power;
+    this.HeaterNomPower2 = device_properties.element2_power;
 
     // === Debug code to show if new features has been added ===
     // let all_features = await this.oAuth2Client.getDevicePoints(this.deviceId);
@@ -227,8 +251,13 @@ class MyHoiaxDevice extends OAuth2Device {
         if ('parameterId' in state_request[val]) {
           if (state_request[val].writable === false) {
             internal_states[reverse_key_map[state_request[val].parameterId]] = state_request[val].strVal; // Value with unit
-            if (parseInt(state_request[val].parameterId) == 526) {
-              this.tankVolume = parseInt(state_request[val].value);
+            let value  = parseInt(state_request[val].value);
+            // This is only required for unknown Høiax devices as these should match with the defaults for all defined devices
+            switch (state_request[val].parameterId) {
+              case 100: this.outsideTemp     = value; break;
+              case 503: this.HeaterNomPower  = value; break;
+              case 504: this.HeaterNomPower2 = value; break;
+              case 526: this.tankVolume      = value; break;
             }
           } else {
             internal_states[reverse_key_map[state_request[val].parameterId]] = state_request[val].value; // Value without unit
@@ -563,7 +592,7 @@ class MyHoiaxDevice extends OAuth2Device {
             break;
           case 517: // 517 = Requested power
             let current_max_power = dev_points[loop].value
-            // Value 0 = Off, 1 = 700W, 2 = 1300W, 3 = 2000W
+            // Value 0 = Off, 1 = this.HeaterNomPower, 2 = this.HeaterNomPower2, 3 = this.HeaterNomPower+this.HeaterNomPower2
             if (current_max_power == 0) {
               // Heater is off
               this.is_on     = false

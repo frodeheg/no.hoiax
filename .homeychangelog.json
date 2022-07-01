@@ -76,5 +76,8 @@
   },
   "1.6.0": {
     "en": "Support for Connected 300 has been added + Fixed small bug that caused the app to crash if a device was deleted"
+  },
+  "1.6.1": {
+    "en": "Added description that the leakage constant could be wrong for Connected 300 devices."
   }
 }

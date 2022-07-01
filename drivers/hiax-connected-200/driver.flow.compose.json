@@ -1,86 +1,46 @@
 {
   "triggers": [
     {
-        "id": "maxpower-changed",
-        "highlight": true,
-        "title": {
-          "en": "Max power changed",
-          "no": "Maks effekt endret seg"
-        },
-        "hint": {
-          "en": "The maximum allowed power changed",
-          "no": "Den maksimalt tillatte effekten endret seg"
-        },
-        "tokens": [
-          {
-            "type": "number",
-            "name": "max_power",
-            "title": {
-              "en": "Max power in Watts",
-              "no": "Maks effekt i Watt"
-            },
-            "example": {
-              "en": "W",
-              "no": "W"
-            }
-          }
-        ]
-      }
+      "$extends": ["maxpower-changed"]
+    }
   ],
   "actions": [
     {
-        "id": "change-maxpower",
-        "highlight": true,
-        "title": {
-            "en": "Change maximum power",
-            "no": "Endre maks effekt"
-        },
-        "titleFormatted": {
-            "en": "Change max power to [[max_power]]",
-            "no": "Endre maks effekt til [[max_power]]"
-        },
-        "hint": {
-            "en": "Changes the maximum power of the water heater",
-            "no": "Endrer maks effekt for varmtvannstanken"
-        },
-        "args": [
-            {
-            "type": "dropdown",
-            "title": { "en": "Max power", "no": "Maks effekt" },
-            "values": [
-                { "id": "low_power",    "label": { "en": "700 W",   "no": "700 W" } },
-                { "id": "medium_power", "label": { "en": "1300 W",  "no": "1300 W" } },
-                { "id": "high_power",   "label": { "en": "2000 W",  "no": "2000 W" } }
-            ],
-            "name": "max_power"
-            }
-        ]
+      "$extends": ["change-maxpower"],
+      "id": "change-maxpower",
+      "$filter": "capabilities=max_power",
+      "args": [
+        {
+        "type": "dropdown",
+        "title": { "en": "Max power", "no": "Maks effekt" },
+        "values": [
+            { "id": "low_power",    "label": { "en": "700 W",   "no": "700 W" } },
+            { "id": "medium_power", "label": { "en": "1300 W",  "no": "1300 W" } },
+            { "id": "high_power",   "label": { "en": "2000 W",  "no": "2000 W" } }
+        ],
+        "name": "max_power"
+        }
+    ]
     },
     {
-      "id": "change-ambient-temp",
-      "highlight": true,
-      "title": {
-          "en": "Let the tank know the room temperature",
-          "no": "La tanken få vite romtemperaturen"
-      },
-      "titleFormatted": {
-          "en": "Change the room temperature to [[ambient_temp]]",
-          "no": "Endre romtemperaturen til [[ambient_temp]]"
-      },
-      "hint": {
-          "en": "By letting the tank know the room temperature, the estimated parameters will be more accurate.",
-          "no": "Ved å sende romtemperaturen til tanken vil estimerte parametere bli mer nøyaktig."
-      },
+      "$extends": ["change-maxpower"],
+      "id": "change-maxpower-3000",
+      "$filter": "capabilities=max_power_3000",
       "args": [
-          {
-          "type": "number",
-          "title": { "en": "Ambient temperature", "no": "Romtemperatur" },
-          "min": 0,
-          "max": 40,
-          "step": 0.1,
-          "name": "ambient_temp"
-          }
-      ]
+        {
+        "type": "dropdown",
+        "title": { "en": "Max power", "no": "Maks effekt" },
+        "values": [
+            { "id": "low_power",    "label": { "en": "1250 W",  "no": "1250 W" } },
+            { "id": "medium_power", "label": { "en": "1750 W",  "no": "1750 W" } },
+            { "id": "high_power",   "label": { "en": "3000 W",  "no": "3000 W" } }
+        ],
+        "name": "max_power"
+        }
+    ]
+    },
+    {
+      "$extends": ["change-ambient-temp"]
     }
   ]
 }

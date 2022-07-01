@@ -1,0 +1,25 @@
+{
+  "highlight": true,
+  "title": {
+    "en": "Max power changed",
+    "no": "Maks effekt endret seg"
+  },
+  "hint": {
+    "en": "The maximum allowed power changed",
+    "no": "Den maksimalt tillatte effekten endret seg"
+  },
+  "tokens": [
+    {
+      "type": "number",
+      "name": "max_power",
+      "title": {
+        "en": "Max power in Watts",
+        "no": "Maks effekt i Watt"
+      },
+      "example": {
+        "en": "W",
+        "no": "W"
+      }
+    }
+  ]
+}

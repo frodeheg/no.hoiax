@@ -1,0 +1,15 @@
+{
+    "highlight": true,
+    "title": {
+        "en": "Change maximum power",
+        "no": "Endre maks effekt"
+    },
+    "titleFormatted": {
+        "en": "Change max power to [[max_power]]",
+        "no": "Endre maks effekt til [[max_power]]"
+    },
+    "hint": {
+        "en": "Changes the maximum power of the water heater",
+        "no": "Endrer maks effekt for varmtvannstanken"
+    }
+}

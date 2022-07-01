@@ -78,24 +78,11 @@
     "actions": [
       {
         "id": "change-maxpower",
-        "highlight": true,
-        "title": {
-          "en": "Change maximum power",
-          "no": "Endre maks effekt"
-        },
-        "titleFormatted": {
-          "en": "Change max power to [[max_power]]",
-          "no": "Endre maks effekt til [[max_power]]"
-        },
-        "hint": {
-          "en": "Changes the maximum power of the water heater",
-          "no": "Endrer maks effekt for varmtvannstanken"
-        },
         "args": [
           {
             "type": "device",
             "name": "device",
-            "filter": "driver_id=hiax-connected-200"
+            "filter": "driver_id=hiax-connected-200&capabilities=max_power"
           },
           {
             "type": "dropdown",
@@ -128,7 +115,74 @@
             ],
             "name": "max_power"
           }
-        ]
+        ],
+        "highlight": true,
+        "title": {
+          "en": "Change maximum power",
+          "no": "Endre maks effekt"
+        },
+        "titleFormatted": {
+          "en": "Change max power to [[max_power]]",
+          "no": "Endre maks effekt til [[max_power]]"
+        },
+        "hint": {
+          "en": "Changes the maximum power of the water heater",
+          "no": "Endrer maks effekt for varmtvannstanken"
+        }
+      },
+      {
+        "id": "change-maxpower-3000",
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=hiax-connected-200&capabilities=max_power_3000"
+          },
+          {
+            "type": "dropdown",
+            "title": {
+              "en": "Max power",
+              "no": "Maks effekt"
+            },
+            "values": [
+              {
+                "id": "low_power",
+                "label": {
+                  "en": "1250 W",
+                  "no": "1250 W"
+                }
+              },
+              {
+                "id": "medium_power",
+                "label": {
+                  "en": "1750 W",
+                  "no": "1750 W"
+                }
+              },
+              {
+                "id": "high_power",
+                "label": {
+                  "en": "3000 W",
+                  "no": "3000 W"
+                }
+              }
+            ],
+            "name": "max_power"
+          }
+        ],
+        "highlight": true,
+        "title": {
+          "en": "Change maximum power",
+          "no": "Endre maks effekt"
+        },
+        "titleFormatted": {
+          "en": "Change max power to [[max_power]]",
+          "no": "Endre maks effekt til [[max_power]]"
+        },
+        "hint": {
+          "en": "Changes the maximum power of the water heater",
+          "no": "Endrer maks effekt for varmtvannstanken"
+        }
       },
       {
         "id": "change-ambient-temp",
@@ -168,10 +222,6 @@
   },
   "drivers": [
     {
-      "name": {
-        "en": "Hoiax CONNECTED",
-        "no": "Høiax CONNECTED"
-      },
       "class": "heater",
       "capabilities": [
         "max_power",
@@ -264,6 +314,10 @@
           "template": "login_oauth2"
         }
       ],
+      "name": {
+        "en": "Hoiax Connected",
+        "no": "Høiax Connected"
+      },
       "id": "hiax-connected-200",
       "settings": [
         {
@@ -708,6 +762,40 @@
           "title": {
             "en": "Max power - 2000 W",
             "no": "Maks effekt - 2000 W"
+          }
+        }
+      ],
+      "uiComponent": "picker",
+      "uiQuickAction": true
+    },
+    "max_power_3000": {
+      "type": "enum",
+      "title": {
+        "en": "Max power",
+        "no": "Max effekt"
+      },
+      "getable": true,
+      "setable": true,
+      "values": [
+        {
+          "id": "low_power",
+          "title": {
+            "en": "Low power - 1250 W",
+            "no": "Lav effekt - 1250 W"
+          }
+        },
+        {
+          "id": "medium_power",
+          "title": {
+            "en": "Medium power - 1750 W",
+            "no": "Middels effekt - 1750 W"
+          }
+        },
+        {
+          "id": "high_power",
+          "title": {
+            "en": "Max power - 3000 W",
+            "no": "Maks effekt - 3000 W"
           }
         }
       ],

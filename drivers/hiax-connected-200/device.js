@@ -1,8 +1,12 @@
 'use strict';
 
-const { privateEncrypt } = require('crypto');
 const { OAuth2Device } = require('homey-oauth2app');
 const retryOnErrorWaitTime = 10000; // ms
+
+// Device types
+const DEVICE_TYPE_CONNECTED_200 = 1;
+const DEVICE_TYPE_CONNECTED_300 = 2;
+const DEVICE_TYPE_UNKNOWN = undefined;
 
 // Connected 200 constants
 const CONNECTED_200_PROPERTIES = {
@@ -77,7 +81,7 @@ class MyHoiaxDevice extends OAuth2Device {
     let new_power_text = (new_power == 1) ? "low_power"         : (new_power == 2) ? "medium_power"       : "high_power"
     let new_power_watt = (new_power == 1) ? this.HeaterNomPower : (new_power == 2) ? this.HeaterNomPower2 : (this.HeaterNomPower + this.HeaterNomPower2)
     this.setCapabilityValue('onoff', turn_on).catch(this.error)
-    this.setCapabilityValue('max_power', new_power_text).catch(this.error)
+    this.setCapabilityValue(this.max_power_capability_name, new_power_text).catch(this.error)
 
     // 3) Send trigger action
     if (new_power != this.max_power) {
@@ -144,9 +148,30 @@ class MyHoiaxDevice extends OAuth2Device {
    */
   async onOAuth2Init() {
     this.log('MyHoiaxDevice was initialized');
-    this.setUnavailable("Initializing device.")
-    this.deviceId = this.getData().deviceId
-    this.intervalID = undefined
+    this.setUnavailable("Initializing device.");
+    this.deviceId = this.getData().deviceId;
+    this.intervalID = undefined;
+    this.deviceType = this.getStoreValue("deviceType");
+
+    // If device type has not been detected previously, detect it once and for all
+    if (this.deviceType == undefined) {
+      let tank_size = undefined
+      while (tank_size == undefined) {
+        try {
+          tank_size = await this.oAuth2Client.getDevicePoints(this.deviceId, key_map.TankVolume);
+        } catch(err) {
+          tank_size = undefined
+          this.setUnavailable("Network problem: " + err)
+          await sleep(retryOnErrorWaitTime)
+        }
+      }
+      switch(parseInt(tank_size[0].value)) {
+        case CONNECTED_200_PROPERTIES.size: this.deviceType = DEVICE_TYPE_CONNECTED_200; break;
+        case CONNECTED_300_PROPERTIES.size: this.deviceType = DEVICE_TYPE_CONNECTED_300; break;
+        default:                            this.deviceType = DEVICE_TYPE_UNKNOWN;       break;
+      }
+      this.setStoreValue("deviceType", this.deviceType).catch(this.error);
+    }
 
     // Capability update from version 1.3.3
     if (!this.hasCapability("meter_power.leak_accum")) {
@@ -157,6 +182,25 @@ class MyHoiaxDevice extends OAuth2Device {
     }
     if (!this.hasCapability("measure_humidity.leak_relation")) {
       await this.addCapability("measure_humidity.leak_relation");
+    }
+
+    // Capability update from version 1.5.2
+    // In case the tank is Connected 300 the capability is wrong
+    if (this.hasCapability("max_power") && (this.deviceType === DEVICE_TYPE_CONNECTED_300)) {
+      this.log("Performing Connected 300 fix")
+      await this.removeCapability("max_power");
+      await this.addCapability("max_power_3000")
+    }
+
+    // As a consequence of version 1.5.2 the max_power capability is now device specific
+    if (this.hasCapability("max_power")) {
+      this.max_power_capability_name = "max_power";
+      this.max_power_action_name = "change-maxpower";
+    } else if (this.hasCapability("max_power_3000")) {
+      this.max_power_capability_name = "max_power_3000";
+      this.max_power_action_name = "change-maxpower-3000";
+    } else {
+      throw new Error("This device is broken, please delete it and reinstall it");
     }
 
     // Initial state for leakage heat
@@ -174,7 +218,7 @@ class MyHoiaxDevice extends OAuth2Device {
     if (this.prevAccumTime == undefined) this.prevAccumTime = new Date();
     if (this.leakageConstant == undefined) this.leakageConstant = 1.58;
     if (this.accumulatedLeakage == undefined) this.accumulatedLeakage = 0;
-    const device_properties = CONNECTED_200_PROPERTIES;
+    const device_properties = (this.deviceType == DEVICE_TYPE_CONNECTED_300) ? CONNECTED_300_PROPERTIES : CONNECTED_200_PROPERTIES;
     this.leakageConstant = device_properties.leakage_constant; // Set it static here because those running debug versions have incorrect leakage
     if (this.leakageConstant == undefined) {
       // In case the leakage constant has not been measured for a device, just scale a known one to have something until
@@ -287,7 +331,7 @@ class MyHoiaxDevice extends OAuth2Device {
     }, 1000*60*5)
 
     // Custom flows
-    const OnMaxPowerAction  = this.homey.flow.getActionCard('change-maxpower')
+    const OnMaxPowerAction  = this.homey.flow.getActionCard(this.max_power_action_name)
 
     OnMaxPowerAction.registerRunListener(async (state) => {
       await this.setHeaterState(
@@ -312,7 +356,7 @@ class MyHoiaxDevice extends OAuth2Device {
       await this.setAmbientTemp(this.deviceId, ambient_temp)
     })
     // Register max power handling
-    this.registerCapabilityListener('max_power', async (value) => {
+    this.registerCapabilityListener(this.max_power_capability_name, async (value) => {
       let new_power = 3 // High power
       if (value == 'low_power') {
         new_power = 1
@@ -346,6 +390,7 @@ class MyHoiaxDevice extends OAuth2Device {
     // trigger but on an unknown device.
     if (this.intervalID != undefined) {
       clearInterval(this.intervalID)
+      this.intervalID = undefined
     }
   }
 
@@ -617,11 +662,6 @@ class MyHoiaxDevice extends OAuth2Device {
     }
     this.logLeakage(log_total, log_temp, log_stored)
     this.setAvailable() // In case it was set to unavailable
-  }
-
-  async onOAuth2Deleted() {
-    // Clean up here
-    this.log('MyHoiaxDevice was deleted');
   }
 
 }

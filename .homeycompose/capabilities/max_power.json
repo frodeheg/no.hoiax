@@ -1,32 +1,32 @@
 {
-    "type": "enum",
-    "title": {
-        "en": "Max power",
-        "no": "Max effekt"
+  "type": "enum",
+  "title": {
+      "en": "Max power",
+      "no": "Max effekt"
+  },
+  "getable": true,
+  "setable": true,
+  "values": [{
+  "id": "low_power",
+      "title": {
+        "en": "Low power - 700 W",
+        "no": "Lav effekt - 700 W"
+      }
     },
-    "getable": true,
-    "setable": true,
-    "values": [{
-    "id": "low_power",
-        "title": {
-          "en": "Low power - 700 W",
-          "no": "Lav effekt - 700 W"
-        }
-      },
-      {
-        "id": "medium_power",
-        "title": {
-          "en": "Medium power - 1300 W",
-          "no": "Middels effekt - 1300 W"
-        }
-      },
-      {
-        "id": "high_power",
-        "title": {
-          "en": "Max power - 2000 W",
-          "no": "Maks effekt - 2000 W"
-        }
-      }],
-    "uiComponent": "picker",
-    "uiQuickAction": true
-  }
+    {
+      "id": "medium_power",
+      "title": {
+        "en": "Medium power - 1300 W",
+        "no": "Middels effekt - 1300 W"
+      }
+    },
+    {
+      "id": "high_power",
+      "title": {
+        "en": "Max power - 2000 W",
+        "no": "Maks effekt - 2000 W"
+      }
+    }],
+  "uiComponent": "picker",
+  "uiQuickAction": true
+}

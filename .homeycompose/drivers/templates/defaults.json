@@ -1,0 +1,94 @@
+{
+    "class": "heater",
+    "capabilities": [
+      "max_power",
+      "meter_power.accumulated",
+      "meter_power.leak_accum",
+      "meter_power.in_tank",
+      "measure_power",
+      "measure_power.leak",
+      "target_temperature",
+      "measure_temperature",
+      "onoff",
+      "measure_humidity.fill_level",
+      "measure_humidity.leak_relation",
+      "ambient_temp"
+    ],
+    "capabilitiesOptions": {
+      "meter_power.accumulated": {
+        "title": {
+          "en": "Total usage",
+          "no": "Totalt forbruk"
+        }
+      },
+      "meter_power.leak_accum": {
+        "title": {
+          "en": "Total heat leakage",
+          "no": "Akkumulert varmetap"
+        }
+      },
+      "meter_power.in_tank": {
+        "title": {
+          "en": "Energy in tank",
+          "no": "I tanken"
+        }
+      },
+      "measure_power.leak": {
+        "title": {
+          "en": "Passive heat leakage",
+          "no": "Passivt varmetap"
+        }
+      },
+      "target_temperature": {
+        "step": 0.5,
+        "min": 20,
+        "max": 85
+      },
+      "measure_humidity.fill_level": {
+        "title": {
+          "en": "Fill level",
+          "no": "Fyllingsgrad"
+        }
+      },
+      "measure_humidity.leak_relation": {
+        "title": {
+          "en": "Energy leaked yesterday",
+          "no": "Andel strømbruk tapt i går"
+        }
+      }
+    },
+    "platforms": [
+      "local"
+    ],
+    "connectivity": [
+      "cloud"
+    ],
+    "images": {
+      "small": "{{driverAssetsPath}}/images/small.png",
+      "large": "{{driverAssetsPath}}/images/large.png",
+      "xlarge": "{{driverAssetsPath}}/images/xlarge.png"
+    },
+    "pair": [
+      {
+        "id": "login_oauth2",
+        "template": "login_oauth2"
+      },
+      {
+        "id": "list_devices",
+        "template": "list_devices",
+        "navigation": {
+          "next": "add_devices"
+        }
+      },
+      {
+        "id": "add_devices",
+        "template": "add_devices"
+      }
+    ],
+    "repair": [
+      {
+        "id": "login_oauth2",
+        "template": "login_oauth2"
+      }
+    ]
+  }

@@ -184,7 +184,7 @@ class MyHoiaxDevice extends OAuth2Device {
       await this.addCapability("measure_humidity.leak_relation");
     }
 
-    // Capability update from version 1.5.2
+    // Capability update from version 1.6.0
     // In case the tank is Connected 300 the capability is wrong
     if (this.hasCapability("max_power") && (this.deviceType === DEVICE_TYPE_CONNECTED_300)) {
       this.log("Performing Connected 300 fix")
@@ -192,7 +192,7 @@ class MyHoiaxDevice extends OAuth2Device {
       await this.addCapability("max_power_3000")
     }
 
-    // As a consequence of version 1.5.2 the max_power capability is now device specific
+    // As a consequence of version 1.6.0 the max_power capability is now device specific
     if (this.hasCapability("max_power")) {
       this.max_power_capability_name = "max_power";
       this.max_power_action_name = "change-maxpower";

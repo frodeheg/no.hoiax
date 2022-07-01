@@ -73,5 +73,8 @@
   },
   "1.5.1": {
     "en": "Made sure the controlling device is not reset to 'Homey' for every new update of the app in case someone changed it to Spot price"
+  },
+  "1.6.0": {
+    "en": "Support for Connected 300 has been added + Fixed small bug that caused the app to crash if a device was deleted"
   }
 }

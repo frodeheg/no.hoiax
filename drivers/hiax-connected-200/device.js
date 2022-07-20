@@ -212,10 +212,10 @@ class MyHoiaxDevice extends OAuth2Device {
     this.prevRelationTime = undefined;
     this.prevRelationUse  = undefined;
     this.prevRelationLeak = undefined;
-    this.prevAccumTime = this.getStoreValue("prevAccumTime");
+    this.prevAccumTime = new Date(this.getStoreValue("prevAccumTime"));
     this.leakageConstant = this.getStoreValue("leakageConstant");
     this.accumulatedLeakage = this.getStoreValue("accumulatedLeakage");
-    if (this.prevAccumTime == undefined) this.prevAccumTime = new Date();
+    if (!(this.prevAccumTime instanceof Date) || isNaN(this.prevAccumTime)) this.prevAccumTime = new Date();
     if (this.leakageConstant == undefined) this.leakageConstant = 1.58;
     if (this.accumulatedLeakage == undefined) this.accumulatedLeakage = 0;
     const device_properties = (this.deviceType == DEVICE_TYPE_CONNECTED_300) ? CONNECTED_300_PROPERTIES : CONNECTED_200_PROPERTIES;

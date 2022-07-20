@@ -79,5 +79,8 @@
   },
   "1.6.1": {
     "en": "Added description that the leakage constant could be wrong for Connected 300 devices."
+  },
+  "1.6.2": {
+    "en": "Fixed a bug interprating the time for last leakage calculation after reboot"
   }
 }

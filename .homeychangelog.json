@@ -88,5 +88,8 @@
   },
   "1.6.4": {
     "en": "No functional change"
+  },
+  "1.6.5": {
+    "en": "Moved notification from device to app"
   }
 }

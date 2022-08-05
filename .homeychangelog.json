@@ -82,5 +82,8 @@
   },
   "1.6.2": {
     "en": "Fixed a bug interpreting the time for last leakage calculation after reboot"
+  },
+  "1.6.3": {
+    "en": "Sneaky ad for my other app"
   }
 }

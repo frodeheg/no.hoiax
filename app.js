@@ -17,6 +17,16 @@ class MyApp extends OAuth2App {
     if (this.DEBUG) {
       this.log('Hoiax has been initialized');
     }
+
+    // Notify the user about the new app
+    const userNotifiedSparegris = this.homey.settings.get('userNotifiedSparegris');
+    if (!userNotifiedSparegris) {
+      // const spareGrisInstalled = this.homey.api.getApiApp('no.sparegris').getInstalled();
+      // if (!spareGrisInstalled) {
+      this.homey.notifications.createNotification({ excerpt: this.homey.__('info.sparegris') });
+      this.homey.settings.set('userNotifiedSparegris', 'yes');
+      // }
+    }
   }
 
 

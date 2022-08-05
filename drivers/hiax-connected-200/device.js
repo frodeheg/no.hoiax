@@ -203,6 +203,16 @@ class MyHoiaxDevice extends OAuth2Device {
       throw new Error("This device is broken, please delete it and reinstall it");
     }
 
+    // Notify the user about the new app
+    const userNotifiedSparegris = this.getStoreValue('userNotifiedSparegris');
+    if (!userNotifiedSparegris) {
+      const spareGrisInstalled = this.homey.api.getApiApp('no.sparegris').getInstalled();
+      if (!spareGrisInstalled) {
+        this.homey.notifications.createNotification({ excerpt: this.homey.__('info.sparegris') });
+        this.setStoreValue('userNotifiedSparegris', 'yes').catch(this.error);
+      }
+    }
+
     // Initial state for leakage heat
 /*    this.prevPower = undefined;
     this.prevTemp  = undefined;

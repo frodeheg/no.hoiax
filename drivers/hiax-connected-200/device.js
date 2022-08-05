@@ -206,11 +206,11 @@ class MyHoiaxDevice extends OAuth2Device {
     // Notify the user about the new app
     const userNotifiedSparegris = this.getStoreValue('userNotifiedSparegris');
     if (!userNotifiedSparegris) {
-      const spareGrisInstalled = this.homey.api.getApiApp('no.sparegris').getInstalled();
-      if (!spareGrisInstalled) {
-        this.homey.notifications.createNotification({ excerpt: this.homey.__('info.sparegris') });
-        this.setStoreValue('userNotifiedSparegris', 'yes').catch(this.error);
-      }
+      // const spareGrisInstalled = this.homey.api.getApiApp('no.sparegris').getInstalled();
+      // if (!spareGrisInstalled) {
+      this.homey.notifications.createNotification({ excerpt: this.homey.__('info.sparegris') });
+      this.setStoreValue('userNotifiedSparegris', 'yes').catch(this.error);
+      // }
     }
 
     // Initial state for leakage heat

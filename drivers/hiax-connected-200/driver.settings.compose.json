@@ -161,8 +161,8 @@
           }
         ],
         "hint": {
-          "en": "WARNING: Unless this value is set to Homey, this app will have to compete with myUplink to control the device. It's no way to say if we will win or not.\n\nThe setting for Spot price is discouraged. Keep the setting at Homey instead and install the app no.sparegris.",
-          "no": "ADVARSEL: Med mindre denne verdien er satt til Homey må denne appen sloss med myUplink om hvem som får styre enheten. Det er ingen måte å vite om vi vil vinne eller ikke.\n\nInnstillingen for Spotpris frarådes, ha denne heller satt til Homey og installer appen no.sparegris."
+          "en": "WARNING: Unless this value is set to Homey, this app will have to compete with myUplink to control the device. It's no way to say if we will win or not.\n\nThe setting for Spot price is discouraged. Keep the setting at Homey instead and install the app Piggy Bank.",
+          "no": "ADVARSEL: Med mindre denne verdien er satt til Homey må denne appen sloss med myUplink om hvem som får styre enheten. Det er ingen måte å vite om vi vil vinne eller ikke.\n\nInnstillingen for Spotpris frarådes, ha denne heller satt til Homey og installer appen Sparegris."
         }
       }
     ]
@@ -170,8 +170,8 @@
   {
     "type": "group",
     "label": {
-      "en": "Spot price (Requires the controlling device to be set to 'Self (Spot price)') - It is strongly reccomended that you instead set the controlling unit to Homey and install the app no.sparegris.",
-      "no": "Spotpris (Krever at styringsenhet er satt til 'Selvstendig (Spotpris)') - Det anbefales på det sterkeste at du heller lar styringsenheten være satt til Homey og istedenfor installerer appen no.sparegris."
+      "en": "Spot price (Requires the controlling device to be set to 'Self (Spot price)') - It is strongly reccomended that you instead set the controlling unit to Homey and install the app Piggy Bank.",
+      "no": "Spotpris (Krever at styringsenhet er satt til 'Selvstendig (Spotpris)') - Det anbefales på det sterkeste at du heller lar styringsenheten være satt til Homey og istedenfor installerer appen Sparegris."
     },
     "children": [
       {

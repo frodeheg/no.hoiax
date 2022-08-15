@@ -1,5 +1,6 @@
 'use strict';
 
+const { request } = require('urllib');
 const { OAuth2App } = require('homey-oauth2app');
 const HoiaxOAuth2Client = require('./lib/HoiaxOAuth2Client');
 
@@ -19,16 +20,33 @@ class MyApp extends OAuth2App {
     }
 
     // Notify the user about the new app
+    const spareGrisVersion = await this.checkSpareGrisVersion();
     const userNotifiedSparegris = this.homey.settings.get('userNotifiedSparegris');
-    if (!userNotifiedSparegris) {
-      // const spareGrisInstalled = this.homey.api.getApiApp('no.sparegris').getInstalled();
-      // if (!spareGrisInstalled) {
+    if ((!userNotifiedSparegris) && (spareGrisVersion === undefined)) {
       this.homey.notifications.createNotification({ excerpt: this.homey.__('info.sparegris') });
       this.homey.settings.set('userNotifiedSparegris', 'yes');
-      // }
     }
   }
 
+  /**
+   * Checks if Sparegris is installed
+   * @return true if sparegris is installed
+   */
+  async checkSpareGrisVersion() {
+    // Can not use the homey.api as such:
+    //   const spareGrisInstalled = this.homey.api.getApiApp('no.sparegris').getInstalled();
+    // Must use web-api instead:
+    const webAddress = 'http://localhost/api/app/no.sparegris/getVersion';
+    try {
+      const { data, res } = await request(webAddress, { dataType: 'json' });
+      if (res.status === 200) {
+        return JSON.parse(data).version;
+      }
+      return undefined;
+    } catch (err) {
+      return undefined;
+    }
+  }
 
 }
 

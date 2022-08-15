@@ -91,5 +91,8 @@
   },
   "1.6.5": {
     "en": "Moved notification from device to app"
+  },
+  "1.6.6": {
+    "en": "Added a check if sparegris is installed so the notification don't appear if it is."
   }
 }

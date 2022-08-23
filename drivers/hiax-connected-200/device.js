@@ -1,3 +1,5 @@
+/* eslint-disable comma-dangle */
+/* eslint-disable no-nested-ternary */
 'use strict';
 
 const { OAuth2Device } = require('homey-oauth2app');
@@ -148,9 +150,10 @@ class MyHoiaxDevice extends OAuth2Device {
    */
   async onOAuth2Init() {
     this.log('MyHoiaxDevice was initialized');
-    this.setUnavailable("Initializing device.");
+    this.setUnavailable('Initializing device.');
     this.deviceId = this.getData().deviceId;
     this.intervalID = undefined;
+    this.initializeID = undefined;
     this.deviceType = this.getStoreValue("deviceType");
 
     // If device type has not been detected previously, detect it once and for all
@@ -269,131 +272,160 @@ class MyHoiaxDevice extends OAuth2Device {
     }
 
     // Set heater max power to 2000 W
-    this.max_power = 3
-    this.is_on = true
+    this.max_power = 3;
+    this.is_on = true;
 
-    // Update internal setup state once only
-    let state_to_fetch = Object.values(key_map).join(",")
-    var state_request = undefined
-    while (state_request == undefined) {
-      try {
-        state_request = await this.oAuth2Client.getDevicePoints(this.deviceId, state_to_fetch);
-      } catch(err) {
-        this.setUnavailable("Network problem: " + err)
-        await sleep(retryOnErrorWaitTime)
-      }
+    // Prepare for reverse indexing of state entries
+    this.reverseKeyMap = {};
+    const keys = Object.keys(key_map);
+    for (let keyNr = 0; keyNr < keys.length; keyNr++) {
+      this.reverseKeyMap[key_map[keys[keyNr]]] = keys[keyNr];
     }
 
-    var reverse_key_map = {}
-    let keys = Object.keys(key_map)
-    for (let key_nr = 0; key_nr < keys.length; key_nr++) {
-      reverse_key_map[key_map[keys[key_nr]]] = keys[key_nr]
-    }
-    var internal_states = {}
-    if (Array.isArray(state_request)) {
-      for (var val = 0; val < state_request.length; val++) {
-        if ('parameterId' in state_request[val]) {
-          if (state_request[val].writable === false) {
-            internal_states[reverse_key_map[state_request[val].parameterId]] = state_request[val].strVal; // Value with unit
-            let value  = parseInt(state_request[val].value);
-            // This is only required for unknown Høiax devices as these should match with the defaults for all defined devices
-            switch (state_request[val].parameterId) {
-              case 100: this.outsideTemp     = value; break;
-              case 503: this.HeaterNomPower  = value; break;
-              case 504: this.HeaterNomPower2 = value; break;
-              case 526: this.tankVolume      = value; break;
-            }
-          } else {
-            internal_states[reverse_key_map[state_request[val].parameterId]] = state_request[val].value; // Value without unit
-          }
-        }
-      }
-    }
-
-    if (Object.keys(internal_states).length != Object.keys(key_map).length) {
-      // This should not happen due to the while loop above
-      var debug_txt = JSON.stringify(state_request).substring(0,300)
-      throw new Error("Unable to initialize driver - device state could not be read - try restarting the app. (for debug: " + debug_txt)
-    }
-
-    try {
-      await this.toSettings(internal_states);
-    }
-    catch(err) {
-      // This should never happen so nothing to handle here, throw error instead
-      throw new Error("toSettings failed, report to developer. This need to be fixed: " + err)
-    }
-
-    // Update internal state every 5 minute:
-    await this.updateState(this.deviceId)
-    this.intervalID = setInterval(() => {
-      this.updateState(this.deviceId)
-    }, 1000*60*5)
+    // Update internal state
+    const statesLeft = Object.values(key_map);
+    await this.initializeInternalStates(statesLeft);
 
     // Custom flows
-    const OnMaxPowerAction  = this.homey.flow.getActionCard(this.max_power_action_name)
+    const OnMaxPowerAction = this.homey.flow.getActionCard(this.max_power_action_name);
 
-    OnMaxPowerAction.registerRunListener(async (state) => {
+    OnMaxPowerAction.registerRunListener(async state => {
       await this.setHeaterState(
         this.deviceId,
         this.is_on,
-        (state['max_power'] == "low_power") ? 1 :
-        (state['max_power'] == "medium_power") ? 2 : 3 )
-    })
+        (state['max_power'] === 'low_power') ? 1
+          : (state['max_power'] === 'medium_power') ? 2
+            : 3
+      );
+    });
 
-    const OnAmbientAction  = this.homey.flow.getActionCard('change-ambient-temp')
+    const OnAmbientAction = this.homey.flow.getActionCard('change-ambient-temp');
 
-    OnAmbientAction.registerRunListener(async (state) => {
+    OnAmbientAction.registerRunListener(async state => {
       await this.setAmbientTemp(this.deviceId, state['ambient_temp'])
-    })
+    });
 
     // Register on/off handling
-    this.registerCapabilityListener('onoff', async (turn_on) => {
-      await this.setHeaterState(this.deviceId, turn_on, this.max_power)
-    })
+    this.registerCapabilityListener('onoff', async turnOn => {
+      await this.setHeaterState(this.deviceId, turnOn, this.max_power);
+    });
+
     // Register ambient temperature handling (probably not required as the capability is hidden)
-    this.registerCapabilityListener('ambient_temp', async (ambient_temp) => {
-      await this.setAmbientTemp(this.deviceId, ambient_temp)
-    })
+    this.registerCapabilityListener('ambient_temp', async ambientTemp => {
+      await this.setAmbientTemp(this.deviceId, ambientTemp);
+    });
+
     // Register max power handling
-    this.registerCapabilityListener(this.max_power_capability_name, async (value) => {
-      let new_power = 3 // High power
-      if (value == 'low_power') {
-        new_power = 1
-      } else if (value == 'medium_power') {
-        new_power = 2
+    this.registerCapabilityListener(this.max_power_capability_name, async value => {
+      let newPower = 3; // High power
+      if (value === 'low_power') {
+        newPower = 1;
+      } else if (value === 'medium_power') {
+        newPower = 2;
       }
-      await this.setHeaterState(this.deviceId, this.is_on, new_power)
-    })
+      await this.setHeaterState(this.deviceId, this.is_on, newPower);
+    });
 
     // Register target temperature handling
-    this.registerCapabilityListener('target_temperature', async (value) => {
-      let target_temp = undefined
-      while (target_temp == undefined || target_temp.ok == false) {
+    this.registerCapabilityListener('target_temperature', async value => {
+      let targetTemp;
+      while (targetTemp === undefined || targetTemp.ok === false) {
         try {
-          target_temp = await this.oAuth2Client.setDevicePoint(this.deviceId, { '527': value });
-        }
-        catch(err) {
-          this.setUnavailable("Network problem: " + err)
-          await sleep(retryOnErrorWaitTime)
+          targetTemp = await this.oAuth2Client.setDevicePoint(this.deviceId, { 527: value });
+        } catch (err) {
+          this.setUnavailable(`Network problem: ${err}`);
+          await sleep(retryOnErrorWaitTime);
         }
       }
-      this.setAvailable()
-      this.log('Target temp:', value)
-    })
-    this.setAvailable()
+      this.setAvailable();
+      this.log('Target temp:', value);
+    });
   }
 
   //
   async onOAuth2Deleted() {
     // Make sure the interval is cleared if it was started, otherwise it will continue to
     // trigger but on an unknown device.
-    if (this.intervalID != undefined) {
-      clearInterval(this.intervalID)
-      this.intervalID = undefined
+    if (this.intervalID !== undefined) {
+      clearInterval(this.intervalID);
+      this.intervalID = undefined;
+    }
+    if (this.initializeID !== undefined) {
+      clearTimeout(this.initializeID);
+      this.initializeID = undefined;
     }
   }
 
+  // Called once on onOAuth2Init - will retry to initialize device for eternity until successful
+  async initializeInternalStates(statesLeft) {
+    let fetchStateError;
+    this.initializeID = undefined;
+    try {
+      const stateToFetch = statesLeft.join(',');
+      let stateRequest;
+      try {
+        stateRequest = await this.oAuth2Client.getDevicePoints(this.deviceId, stateToFetch);
+      } catch (innerErr) {
+        throw new Error(`Network problem: ${innerErr}`);
+      }
+
+      const fetchedStates = {};
+      if (Array.isArray(stateRequest)) {
+        for (let val = 0; val < stateRequest.length; val++) {
+          if ('parameterId' in stateRequest[val]) {
+            if (stateRequest[val].writable === false) {
+              fetchedStates[this.reverseKeyMap[stateRequest[val].parameterId]] = stateRequest[val].strVal; // Value with unit
+              const value = parseInt(stateRequest[val].value, 10);
+              // This is only required for unknown Høiax devices as these should match with the defaults for all defined devices
+              switch (stateRequest[val].parameterId) {
+                case 100: this.outsideTemp = value; break;
+                case 503: this.HeaterNomPower = value; break;
+                case 504: this.HeaterNomPower2 = value; break;
+                case 526: this.tankVolume = value; break;
+                default: break; // Other values are writeable, so not handled here
+              }
+            } else {
+              fetchedStates[this.reverseKeyMap[stateRequest[val].parameterId]] = stateRequest[val].value; // Value without unit
+            }
+          }
+        }
+      }
+      if (Object.keys(fetchedStates).length > 0) {
+        try {
+          await this.toSettings(fetchedStates);
+          statesLeft = statesLeft.filter(value => {
+            return !(this.reverseKeyMap[value] in fetchedStates);
+          });
+        } catch (innerErr) {
+          // Nothing I possibly can do? Disk full?
+          throw new Error(`toSettings failed: ${innerErr}`);
+        }
+      }
+    } catch (err) {
+      // Can be 'Network problem' or 'toSettings failed' (disk full?)
+      fetchStateError = err;
+    } finally {
+      if (statesLeft.length > 0) {
+        // The device is still not initialized
+        this.log(`Could not fetch the following states: ${JSON.stringify(statesLeft)}`);
+        if (fetchStateError === undefined) {
+          fetchStateError = 'no connection with myUplink server';
+        }
+        this.setUnavailable(`Unable to initialize driver (${fetchStateError})`);
+        // Retry this function again in a while
+        this.initializeID = setTimeout(() => {
+          this.initializeInternalStates(statesLeft);
+        }, retryOnErrorWaitTime);
+      } else {
+        // Device finally ok, update internal state every 5 minute:
+        await this.updateState(this.deviceId);
+        this.intervalID = setInterval(() => {
+          this.updateState(this.deviceId);
+        }, 1000 * 60 * 5);
+        this.setAvailable();
+      }
+    }
+  }
 
   // Calculate leakage heat and update the stores
   // Leakage is calculated from a series of measurements where the following are ignored:

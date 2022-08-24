@@ -99,7 +99,7 @@ class MyHoiaxDevice extends OAuth2Device {
   }
 
   async setAmbientTemp(deviceId, ambientTemp) {
-    if (Number.isNaN(ambientTemp)) {
+    if ((Number.isNaN(+ambientTemp)) || (this.outsideTemp === ambientTemp)) {
       return;
     }
     // this.log("New ambient temperature:" + String(ambientTemp))
@@ -209,7 +209,7 @@ class MyHoiaxDevice extends OAuth2Device {
     this.prevRelationLeak = undefined;
     this.prevAccumTime = new Date(this.getStoreValue('prevAccumTime'));
     this.accumulatedLeakage = this.getStoreValue('accumulatedLeakage');
-    if (!(this.prevAccumTime instanceof Date) || Number.isNaN(this.prevAccumTime)) this.prevAccumTime = new Date();
+    if (!(this.prevAccumTime instanceof Date) || Number.isNaN(+this.prevAccumTime)) this.prevAccumTime = new Date();
     if (!this.accumulatedLeakage) this.accumulatedLeakage = 0;
     const deviceProperties = (this.deviceType === DEVICE_TYPE_CONNECTED_300) ? CONNECTED_300_PROPERTIES : CONNECTED_200_PROPERTIES;
     this.leakageConstant = deviceProperties.leakage_constant; // Set it static here because those running debug versions have incorrect leakage
@@ -421,9 +421,9 @@ class MyHoiaxDevice extends OAuth2Device {
   // https://vannbaserte.nemitek.no/833-artikkel-vannbaserte-oppvarmings-og-kjolesystemer-2014/beredertemperatur-og-varmetap/163668
   async logLeakage(totalUsage, temperature, inTank, debugTime = undefined) {
     this.log(`logLeakage(${String(totalUsage)}, ${String(temperature)}, ${String(inTank)}, ${String((new Date()).getTime())});`);
-    const newTime = Number.isNaN(debugTime) ? new Date() : debugTime;
+    const newTime = Number.isNaN(+debugTime) ? new Date() : debugTime;
     // Make sure input is valid
-    if (Number.isNaN(totalUsage) || Number.isNaN(temperature) || Number.isNaN(inTank)) {
+    if (Number.isNaN(+totalUsage) || Number.isNaN(+temperature) || Number.isNaN(+inTank)) {
       throw (new Error('Invalid values read from water heater'));
     }
     const outerTempDiff = temperature - this.outsideTemp;
@@ -431,15 +431,18 @@ class MyHoiaxDevice extends OAuth2Device {
     const accumTimeDiff = newTime - this.prevAccumTime;
     const currentLeakage = this.leakageConstant * outerTempDiff; // W
     const timedLeakage = (currentLeakage * accumTimeDiff) / (60 * 60 * 1000000); // kWh
-    if (!Number.isNaN(timedLeakage)) {
+    if (!Number.isNaN(+timedLeakage)) {
       this.prevAccumTime = newTime;
       this.accumulatedLeakage += timedLeakage;
       // Update statistics
       this.setCapabilityValue('measure_power.leak', currentLeakage);
       this.setCapabilityValue('meter_power.leak_accum', this.accumulatedLeakage);
-      // Update stores
-      this.setStoreValue('prevAccumTime', this.prevAccumTime).catch(this.error);
-      this.setStoreValue('accumulatedLeakage', this.accumulatedLeakage).catch(this.error);
+      // Update stores only once every day only to save the homey disk:
+      const prevUpdateTime = new Date(this.getStoreValue('prevAccumTime'));
+      if ((this.prevAccumTime - prevUpdateTime) > (24 * 60 * 60 * 1000)) {
+        this.setStoreValue('prevAccumTime', this.prevAccumTime).catch(this.error);
+        this.setStoreValue('accumulatedLeakage', this.accumulatedLeakage).catch(this.error);
+      }
     }
 
     // Check relations

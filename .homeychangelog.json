@@ -94,5 +94,8 @@
   },
   "1.6.6": {
     "en": "Added a check if sparegris is installed so the notification don't appear if it is."
+  },
+  "1.6.7": {
+    "en": "Fixed a crash bug as reported by EddieX in the forum + improved the lifetime of Homey by reducing wear introduced by writing to the disk (this will reduce the accuracy of the leakage heat calculation whenever the app is restarted but this is considered less important)."
   }
 }

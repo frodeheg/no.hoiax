@@ -1,6 +1,6 @@
 'use strict';
 
-const { request } = require('urllib');
+const { request } = require('urllib'); // This adds 512kB to the app
 const { OAuth2App } = require('homey-oauth2app');
 const HoiaxOAuth2Client = require('./lib/HoiaxOAuth2Client');
 

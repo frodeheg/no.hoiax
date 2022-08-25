@@ -97,5 +97,8 @@
   },
   "1.6.7": {
     "en": "Fixed a crash bug as reported by EddieX in the forum + improved the lifetime of Homey by reducing wear introduced by writing to the disk (this will reduce the accuracy of the leakage heat calculation whenever the app is restarted but this is considered less important)."
+  },
+  "1.6.8": {
+    "en": "Added some more debug information to try to resolve recent connection issues + Try to ignore Nordpool device setting if it cannot be retreived as this has been reported as an issue? (not sure why, it works on my device)"
   }
 }

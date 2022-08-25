@@ -349,11 +349,13 @@ class MyHoiaxDevice extends OAuth2Device {
   async initializeInternalStates(statesLeft) {
     let fetchStateError;
     this.initializeID = undefined;
+    this.log(`Fetching states: ${JSON.stringify(statesLeft)}`);
     try {
       const stateToFetch = statesLeft.join(',');
       let stateRequest;
       try {
         stateRequest = await this.oAuth2Client.getDevicePoints(this.deviceId, stateToFetch);
+        this.log(`stateRequest: ${JSON.stringify(stateRequest)}`);
       } catch (innerErr) {
         throw new Error(`Network problem: ${innerErr}`);
       }
@@ -387,30 +389,45 @@ class MyHoiaxDevice extends OAuth2Device {
           });
         } catch (innerErr) {
           // Nothing I possibly can do? Disk full?
-          throw new Error(`toSettings failed: ${innerErr}`);
+          throw new Error(`Could not save settings at this time, will retry in a bit: ${innerErr}`);
         }
       }
     } catch (err) {
       // Can be 'Network problem' or 'toSettings failed' (disk full?)
       fetchStateError = err;
     } finally {
+      try {
+        if ((statesLeft.length > 0) && (this.fullListReported === undefined)) {
+          let fullList = await this.oAuth2Client.getDevicePoints(this.deviceId, []);
+          this.log(`Failed to get some device points, this is the full list: ${JSON.stringify(fullList)}`);
+          this.fullListReported = true;
+        }
+      } catch (err) {} // No need for error handling as this is just debug prints
+      if ((statesLeft.length === 1) && (statesLeft[0] === '544')) {
+        this.log('All states fetched correctly except NoordPool. Skipping it as it has a history of trouble.');
+        statesLeft = []; // This reading seem to be problematic on some newer tanks???
+      }
       if (statesLeft.length > 0) {
         // The device is still not initialized
         this.log(`Could not fetch the following states: ${JSON.stringify(statesLeft)}`);
         if (!fetchStateError) {
-          fetchStateError = 'no connection with myUplink server';
+          fetchStateError = 'myUplink server is unresponsive / bad internet connection. If it does not resolve in a few minutes please contact the developer.';
         }
         this.setUnavailable(`Unable to initialize driver (${fetchStateError})`);
         // Retry this function again in a while
+        this.log(`Retry these states in a while: ${JSON.stringify(statesLeft)}`);
         this.initializeID = setTimeout(() => {
           this.initializeInternalStates(statesLeft);
         }, retryOnErrorWaitTime);
       } else {
         // Device finally ok, update internal state every 5 minute:
-        await this.updateState(this.deviceId);
+        try {
+          await this.updateState(this.deviceId);
+        } catch (err) {} // Do not care, the setInterval below wil refresh the state anyway
         this.intervalID = setInterval(() => {
           this.updateState(this.deviceId);
         }, 1000 * 60 * 5);
+        this.log('Device init complete');
         this.setAvailable();
       }
     }

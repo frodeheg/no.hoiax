@@ -39,6 +39,26 @@
     "name": "Frode Heggelund",
     "email": "frode.heggelund@gmail.com"
   },
+  "contributors": {
+    "developers": [
+      {
+        "name": "Frode Heggelund",
+        "email": "frode.heggelund@gmail.com"
+      }
+    ],
+    "translators": [
+      {
+        "name": "Frode Heggelund"
+      }
+    ]
+  },
+  "api": {
+    "getVersion": {
+      "method": "GET",
+      "path": "/getVersion",
+      "public": true
+    }
+  },
   "flow": {
     "triggers": [
       {
@@ -446,13 +466,6 @@
                   }
                 },
                 {
-                  "id": "6",
-                  "label": {
-                    "en": "Self (Spot price)",
-                    "no": "Selvstendig (Spotpris)"
-                  }
-                },
-                {
                   "id": "7",
                   "label": {
                     "en": "Self (Schedule)",
@@ -482,127 +495,8 @@
                 }
               ],
               "hint": {
-                "en": "WARNING: Unless this value is set to Homey, this app will have to compete with myUplink to control the device. It's no way to say if we will win or not.\n\nThe setting for Spot price is discouraged. Keep the setting at Homey instead and install the app Piggy Bank.",
-                "no": "ADVARSEL: Med mindre denne verdien er satt til Homey må denne appen sloss med myUplink om hvem som får styre enheten. Det er ingen måte å vite om vi vil vinne eller ikke.\n\nInnstillingen for Spotpris frarådes, ha denne heller satt til Homey og installer appen Sparegris."
-              }
-            }
-          ]
-        },
-        {
-          "type": "group",
-          "label": {
-            "en": "Spot price (Requires the controlling device to be set to 'Self (Spot price)') - It is strongly reccomended that you instead set the controlling unit to Homey and install the app Piggy Bank.",
-            "no": "Spotpris (Krever at styringsenhet er satt til 'Selvstendig (Spotpris)') - Det anbefales på det sterkeste at du heller lar styringsenheten være satt til Homey og istedenfor installerer appen Sparegris."
-          },
-          "children": [
-            {
-              "id": "nordpool_price_region",
-              "type": "dropdown",
-              "value": "0",
-              "label": {
-                "en": "Nordpool price region",
-                "no": "Nordpool prisregion"
-              },
-              "values": [
-                {
-                  "id": "1",
-                  "label": {
-                    "en": "NO1 - Norway East",
-                    "no": "NO1 - Norge Øst"
-                  }
-                },
-                {
-                  "id": "2",
-                  "label": {
-                    "en": "NO2 - Norway South",
-                    "no": "NO2 - Norge Sør"
-                  }
-                },
-                {
-                  "id": "3",
-                  "label": {
-                    "en": "NO3 - Norway Middle",
-                    "no": "NO3 - Norge Midt"
-                  }
-                },
-                {
-                  "id": "4",
-                  "label": {
-                    "en": "NO4 - Norway North",
-                    "no": "NO4 - Norge Nord"
-                  }
-                },
-                {
-                  "id": "5",
-                  "label": {
-                    "en": "NO5 - Norway West",
-                    "no": "NO5 - Norge Vest"
-                  }
-                }
-              ],
-              "hint": {
-                "en": "The price region to which the tank should be adapted",
-                "no": "Prisregion som strømstyringen skal tilpasses"
-              }
-            },
-            {
-              "id": "num_expensive_hours",
-              "type": "number",
-              "label": {
-                "en": "Number of expensive hours per day",
-                "no": "Antall dyre timer per døgn"
-              },
-              "value": 6,
-              "min": 0,
-              "max": 18,
-              "units": {
-                "en": "hours",
-                "no": "timer"
-              }
-            },
-            {
-              "id": "min_remain_heat",
-              "type": "number",
-              "label": {
-                "en": "Minimum remaining heat in expensive hours",
-                "no": "Minimum restvarme i dyre timer"
-              },
-              "value": 50,
-              "min": 20,
-              "max": 100,
-              "units": {
-                "en": "%",
-                "no": "%"
-              }
-            },
-            {
-              "id": "num_cheap_hours",
-              "type": "number",
-              "label": {
-                "en": "Number of cheap hours per day",
-                "no": "Antall billige timer per døgn"
-              },
-              "value": 4,
-              "min": 0,
-              "max": 12,
-              "units": {
-                "en": "hours",
-                "no": "timer"
-              }
-            },
-            {
-              "id": "temp_inc_cheap_hours",
-              "type": "number",
-              "label": {
-                "en": "Setpoint increase in cheap hours",
-                "no": "Temperaturøkning i billige timer"
-              },
-              "value": 5,
-              "min": 0,
-              "max": 20,
-              "units": {
-                "en": "°C",
-                "no": "°C"
+                "en": "WARNING: Unless this value is set to Homey, this app will have to compete with myUplink to control the device. It's no way to say if we will win or not.\n\nFor optimal control of the tank with regards to prices and power tariff it is reccomended to install the app Piggy Bank to control the tank.",
+                "no": "ADVARSEL: Med mindre denne verdien er satt til Homey må denne appen sloss med myUplink om hvem som får styre enheten. Det er ingen måte å vite om vi vil vinne eller ikke.\n\nFor optimal styring av tanken med hensyn på strømpris og effekttariff anbefales det å installere appen Sparegris for å kontrollere tanken."
               }
             }
           ]

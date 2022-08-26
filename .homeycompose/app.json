@@ -37,5 +37,25 @@
   "author": {
     "name": "Frode Heggelund",
     "email": "frode.heggelund@gmail.com"
+  },
+  "contributors": {
+    "developers": [
+      {
+        "name": "Frode Heggelund",
+        "email": "frode.heggelund@gmail.com"
+      }
+    ],
+    "translators": [
+      {
+        "name": "Frode Heggelund"
+      }
+    ]
+  },
+  "api": {
+    "getVersion": {
+      "method": "GET",
+      "path": "/getVersion",
+      "public": true
+    }
   }
 }

@@ -21,17 +21,17 @@ class MyApp extends OAuth2App {
     }
 
     // Notify the user about the new app
-    /* const spareGrisVersion = await this.checkSpareGrisVersion();
+    const spareGrisVersion = await this.checkSpareGrisVersion();
     const userNotifiedSparegris = this.homey.settings.get('userNotifiedSparegris');
     if ((!userNotifiedSparegris) && (spareGrisVersion === undefined)) {
       this.homey.notifications.createNotification({ excerpt: this.homey.__('info.sparegris') });
       this.homey.settings.set('userNotifiedSparegris', 'yes');
-    } */
+    }
   }
 
   /**
    * Checks if Sparegris is installed
-   * @return true if sparegris is installed
+   * @return the version number if sparegris is installed. Undefined otherwise.
    */
   async checkSpareGrisVersion() {
     // Can not use the homey.api as such:

@@ -120,6 +120,7 @@ class MyHoiaxDevice extends OAuth2Device {
   async toSettings(newSettings) {
     const toSetSettings = clone(newSettings);
     toSetSettings.controling_device = String(toSetSettings.controling_device);
+    if (toSetSettings.controling_device === '6') toSetSettings.controling_device = '8'; // Price control (6) is deprecated, set to Homey (8)
     toSetSettings.TankVolume = String(toSetSettings.TankVolume);
     toSetSettings.SerialNo = String(toSetSettings.SerialNo); // Also in this.getData().deviceId
     toSetSettings.HeaterNomPower = String(toSetSettings.HeaterNomPower);
@@ -221,29 +222,29 @@ class MyHoiaxDevice extends OAuth2Device {
 
     // Make sure that the Heater mode is controllable - set to External mode (but only if first time the app is run)
     this.isFirstTime = this.getStoreValue('isFirstTime');
-    if (!this.isFirstTime) {
-      let heaterMode;
-      while (!heaterMode) {
+    let heaterMode;
+    while (!heaterMode) {
+      try {
+        heaterMode = await this.oAuth2Client.getDevicePoints(this.deviceId, '500');
+      } catch (err) {
+        heaterMode = undefined;
+        this.setUnavailable(`Network problem: ${err}`);
+        await sleep(retryOnErrorWaitTime);
+      }
+    }
+    if (!heaterMode[0]) {
+      // Given the while loop above this should not happen so throw error
+      throw new Error(`Problems reading heater mode: ${heaterMode.message}`);
+    } else if (
+      ((!this.isFirstTime) && (heaterMode[0].value !== '8')) // 8 == External
+      || (heaterMode[0].value !== '6')) { // 6 == Price control - which is deprecated
+      let res;
+      while (!res || res.ok === false) {
         try {
-          heaterMode = await this.oAuth2Client.getDevicePoints(this.deviceId, '500');
+          res = await this.oAuth2Client.setDevicePoint(this.deviceId, { 500: '8' });
         } catch (err) {
-          heaterMode = undefined;
           this.setUnavailable(`Network problem: ${err}`);
           await sleep(retryOnErrorWaitTime);
-        }
-      }
-      if (!heaterMode[0]) {
-        // Given the while loop above this should not happen so throw error
-        throw new Error(`Problems reading heater mode: ${heaterMode.message}`);
-      } else if (heaterMode[0].value !== 8) { // 8 == External
-        let res;
-        while (!res || res.ok === false) {
-          try {
-            res = await this.oAuth2Client.setDevicePoint(this.deviceId, { 500: '8' });
-          } catch (err) {
-            this.setUnavailable(`Network problem: ${err}`);
-            await sleep(retryOnErrorWaitTime);
-          }
         }
       }
       this.isFirstTime = false;

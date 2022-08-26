@@ -1,3 +1,5 @@
+/* eslint-disable comma-dangle */
+
 'use strict';
 
 const { OAuth2Driver } = require('homey-oauth2app');
@@ -9,17 +11,17 @@ class HoiaxDriver extends OAuth2Driver {
    */
   async onOAuth2Init() {
     // Register Flow Cards etc.
-    this._maxPowerChangedTrigger = this.homey.flow.getDeviceTriggerCard('maxpower-changed')
+    this._maxPowerChangedTrigger = this.homey.flow.getDeviceTriggerCard('maxpower-changed');
     this.log('HoiaxOAuth2Driver has been initialized');
   }
 
   /**
    * triggerOnOffFlow triggers the flow to turn on/off the water heater partially
    */
-   triggerMaxPowerChanged(device, tokens, state) {
+  triggerMaxPowerChanged(device, tokens, state) {
     this._maxPowerChangedTrigger
-    .trigger(device, tokens, state)
-    .catch(this.error);
+      .trigger(device, tokens, state)
+      .catch(this.error);
   }
 
   /**
@@ -28,29 +30,29 @@ class HoiaxDriver extends OAuth2Driver {
    * This should return an array with the data of devices that are available for pairing.
    */
   async onPairListDevices({ oAuth2Client }) {
-    let devicelist = []
+    const devicelist = [];
     // Fetch only the first page as nobody will ever control more than 10 water tanks with Homey
     const things = await oAuth2Client.getDevices({ page: 1 });
 
     // NOTE: This code has Never been tested with more than 1 device but should support more
-    for (let item_nr = 0; item_nr < things.numItems; item_nr++) {
-      const system = things.systems[item_nr]
-      for (let device_nr = 0; device_nr < system.devices.length; device_nr++) {
-        const device = system.devices[device_nr]
-        let mydevice = {
+    for (let itemNr = 0; itemNr < things.numItems; itemNr++) {
+      const system = things.systems[itemNr];
+      for (let deviceNr = 0; deviceNr < system.devices.length; deviceNr++) {
+        const device = system.devices[deviceNr];
+        const mydevice = {
           name: undefined, // Replaced by product name
           data: {
-            systemId:     system.systemId,
-            systemName:   system.name,
-            deviceId:     device.id,
+            systemId: system.systemId,
+            systemName: system.name,
+            deviceId: device.id,
             deviceSerial: device.product.serialNumber,
-            deviceName:   device.product.name
+            deviceName: device.product.name
           }
-        }
-        devicelist.push(mydevice)
+        };
+        devicelist.push(mydevice);
       }
     }
-    return devicelist
+    return devicelist;
   }
 
 }

@@ -100,5 +100,8 @@
   },
   "1.6.8": {
     "en": "Added some more debug information to try to resolve recent connection issues + Try to ignore Nordpool device setting if it cannot be retreived as this has been reported as an issue? (not sure why, it works on my device)"
+  },
+  "1.7.0": {
+    "en": "Removed the deprecated myUplink feature to control the tank using NordPool prices."
   }
 }

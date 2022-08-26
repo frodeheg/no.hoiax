@@ -37,11 +37,6 @@ const keyMap = {
   regulation_diff: '516',
   legionella_frequency: '511',
   controling_device: '500',
-  nordpool_price_region: '544',
-  num_expensive_hours: '545',
-  min_remain_heat: '546',
-  num_cheap_hours: '547',
-  temp_inc_cheap_hours: '548',
   TankVolume: '526',
   SerialNo: '518',
   HeaterNomPower: '503',
@@ -124,11 +119,6 @@ class MyHoiaxDevice extends OAuth2Device {
    */
   async toSettings(newSettings) {
     const toSetSettings = clone(newSettings);
-    toSetSettings.nordpool_price_region = String(toSetSettings.nordpool_price_region);
-    // toSetSettings.num_expensive_hours = toSetSettings.num_expensive_hours;
-    // toSetSettings.min_remain_heat = toSetSettings.min_remain_heat;
-    // toSetSettings.num_cheap_hours = toSetSettings.num_cheap_hours;
-    // toSetSettings.temp_inc_cheap_hours = toSetSettings.temp_inc_cheap_hours;
     toSetSettings.controling_device = String(toSetSettings.controling_device);
     toSetSettings.TankVolume = String(toSetSettings.TankVolume);
     toSetSettings.SerialNo = String(toSetSettings.SerialNo); // Also in this.getData().deviceId
@@ -398,15 +388,11 @@ class MyHoiaxDevice extends OAuth2Device {
     } finally {
       try {
         if ((statesLeft.length > 0) && (this.fullListReported === undefined)) {
-          let fullList = await this.oAuth2Client.getDevicePoints(this.deviceId, []);
+          const fullList = await this.oAuth2Client.getDevicePoints(this.deviceId, []);
           this.log(`Failed to get some device points, this is the full list: ${JSON.stringify(fullList)}`);
           this.fullListReported = true;
         }
       } catch (err) {} // No need for error handling as this is just debug prints
-      if ((statesLeft.length === 1) && (statesLeft[0] === '544')) {
-        this.log('All states fetched correctly except NoordPool. Skipping it as it has a history of trouble.');
-        statesLeft = []; // This reading seem to be problematic on some newer tanks???
-      }
       if (statesLeft.length > 0) {
         // The device is still not initialized
         this.log(`Could not fetch the following states: ${JSON.stringify(statesLeft)}`);

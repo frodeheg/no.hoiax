@@ -103,5 +103,8 @@
   },
   "1.7.0": {
     "en": "Removed the deprecated myUplink feature to control the tank using NordPool prices."
+  },
+  "1.7.1": {
+    "en": "Added back the spotprice option but this time with a check to prevent tanks without the options from crashing."
   }
 }

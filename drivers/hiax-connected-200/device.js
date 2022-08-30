@@ -37,6 +37,11 @@ const keyMap = {
   regulation_diff: '516',
   legionella_frequency: '511',
   controling_device: '500',
+  nordpool_price_region: '544',
+  num_expensive_hours: '545',
+  min_remain_heat: '546',
+  num_cheap_hours: '547',
+  temp_inc_cheap_hours: '548',
   TankVolume: '526',
   SerialNo: '518',
   HeaterNomPower: '503',
@@ -119,8 +124,16 @@ class MyHoiaxDevice extends OAuth2Device {
    */
   async toSettings(newSettings) {
     const toSetSettings = clone(newSettings);
+    toSetSettings.nordpool_price_region = String(toSetSettings.nordpool_price_region);
+    // toSetSettings.num_expensive_hours = toSetSettings.num_expensive_hours;
+    // toSetSettings.min_remain_heat = toSetSettings.min_remain_heat;
+    // toSetSettings.num_cheap_hours = toSetSettings.num_cheap_hours;
+    // toSetSettings.temp_inc_cheap_hours = toSetSettings.temp_inc_cheap_hours;
     toSetSettings.controling_device = String(toSetSettings.controling_device);
-    if (toSetSettings.controling_device === '6') toSetSettings.controling_device = '8'; // Price control (6) is deprecated, set to Homey (8)
+    if (this.brokenSpotPrice && (toSetSettings.controling_device === '6')) {
+      // Price control (6) is not available on all tanks, set to Homey (8)
+      toSetSettings.controling_device = '8';
+    }
     toSetSettings.TankVolume = String(toSetSettings.TankVolume);
     toSetSettings.SerialNo = String(toSetSettings.SerialNo); // Also in this.getData().deviceId
     toSetSettings.HeaterNomPower = String(toSetSettings.HeaterNomPower);
@@ -220,8 +233,7 @@ class MyHoiaxDevice extends OAuth2Device {
     // let all_features = await this.oAuth2Client.getDevicePoints(this.deviceId);
     // this.log(JSON.stringify(all_features))
 
-    // Make sure that the Heater mode is controllable - set to External mode (but only if first time the app is run)
-    this.isFirstTime = this.getStoreValue('isFirstTime');
+    // Fetch the heater mode in order to set it to Homey and check if myuplink is broken
     let heaterMode;
     while (!heaterMode) {
       try {
@@ -235,16 +247,30 @@ class MyHoiaxDevice extends OAuth2Device {
     if (!heaterMode[0]) {
       // Given the while loop above this should not happen so throw error
       throw new Error(`Problems reading heater mode: ${heaterMode.message}`);
-    } else if (
-      ((!this.isFirstTime) && (heaterMode[0].value !== '8')) // 8 == External
-      || (heaterMode[0].value !== '6')) { // 6 == Price control - which is deprecated
-      let res;
-      while (!res || res.ok === false) {
-        try {
-          res = await this.oAuth2Client.setDevicePoint(this.deviceId, { 500: '8' });
-        } catch (err) {
-          this.setUnavailable(`Network problem: ${err}`);
-          await sleep(retryOnErrorWaitTime);
+    }
+    // Check if myUplink is broken. Apparently version 1.23 (2262) is
+    this.brokenSpotPrice = true;
+    for (let i = 0; i < heaterMode[0].enumValues.length; i++) {
+      if (heaterMode[0].enumValues[i].value === '6') {
+        this.brokenSpotPrice = false;
+      }
+    }
+    if (this.brokenSpotPrice) {
+      this.log('The Spot Price setting seem to be broken and will be disabled');
+    }
+
+    // Make sure that the Heater mode is controllable - set to External mode (but only if first time the app is run)
+    this.isFirstTime = this.getStoreValue('isFirstTime');
+    if (!this.isFirstTime) {
+      if (heaterMode[0].value !== '8') { // 8 == External
+        let res;
+        while (!res || res.ok === false) {
+          try {
+            res = await this.oAuth2Client.setDevicePoint(this.deviceId, { 500: '8' });
+          } catch (err) {
+            this.setUnavailable(`Network problem: ${err}`);
+            await sleep(retryOnErrorWaitTime);
+          }
         }
       }
       this.isFirstTime = false;
@@ -263,7 +289,10 @@ class MyHoiaxDevice extends OAuth2Device {
     }
 
     // Update internal state
-    const statesLeft = Object.values(keyMap);
+    let statesLeft = Object.values(keyMap);
+    if (this.brokenSpotPrice) {
+      statesLeft = statesLeft.filter(value => +value < 544 || +value > 548);
+    }
     await this.initializeInternalStates(statesLeft);
 
     // Custom flows
@@ -475,7 +504,11 @@ class MyHoiaxDevice extends OAuth2Device {
     const keyChange = {};
     for (let keyNr = 0; keyNr < changedKeys.length; keyNr++) {
       this.log(`${changedKeys[keyNr]} changed: `, newSettings[changedKeys[keyNr]], ' (key: ', keyMap[changedKeys[keyNr]], ')');
-      keyChange[keyMap[changedKeys[keyNr]]] = newSettings[changedKeys[keyNr]];
+      const keyIndex = keyMap[changedKeys[keyNr]];
+      if (!(this.brokenSpotPrice && +keyIndex >= 544 && +keyIndex <= 548)) {
+        // Only change the settings that are available for the tank in question
+        keyChange[keyIndex] = newSettings[changedKeys[keyNr]];
+      }
     }
     if (Object.keys(keyChange).length > 0) {
       let response;

@@ -109,5 +109,8 @@
   },
   "1.7.2": {
     "en": "Fixed the code that sets the controlling device to Homey when the app is first installed. Unintentionally it was being reset on every app restart."
+  },
+  "1.7.3": {
+    "en": "Added a better description when reading undefined values from myUplink"
   }
 }

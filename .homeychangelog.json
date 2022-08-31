@@ -106,5 +106,8 @@
   },
   "1.7.1": {
     "en": "Added back the spotprice option but this time with a check to prevent tanks without the options from crashing."
+  },
+  "1.7.2": {
+    "en": "Fixed the code that sets the controlling device to Homey when the app is first installed. Unintentionally it was being reset on every app restart."
   }
 }

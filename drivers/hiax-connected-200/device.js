@@ -457,7 +457,7 @@ class MyHoiaxDevice extends OAuth2Device {
     const newTime = Number.isNaN(+debugTime) ? new Date() : debugTime;
     // Make sure input is valid
     if (Number.isNaN(+totalUsage) || Number.isNaN(+temperature) || Number.isNaN(+inTank)) {
-      throw (new Error('Invalid values read from water heater'));
+      throw (new Error(`Invalid values read from water heater: Usage=${totalUsage}, Temp=${temperature}, HeatAvailable=${inTank}`));
     }
     const outerTempDiff = temperature - this.outsideTemp;
 

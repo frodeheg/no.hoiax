@@ -260,8 +260,8 @@ class MyHoiaxDevice extends OAuth2Device {
     }
 
     // Make sure that the Heater mode is controllable - set to External mode (but only if first time the app is run)
-    this.isFirstTime = this.getStoreValue('isFirstTime');
-    if (!this.isFirstTime) {
+    this.isFirstTime = this.getStoreValue('isFirstTime') === null;
+    if (this.isFirstTime) {
       if (heaterMode[0].value !== '8') { // 8 == External
         let res;
         while (!res || res.ok === false) {

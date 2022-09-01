@@ -112,5 +112,8 @@
   },
   "1.7.3": {
     "en": "Added a better description when reading undefined values from myUplink"
+  },
+  "1.7.4": {
+    "en": "Added debug output for latest crash report"
   }
 }

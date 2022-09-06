@@ -115,5 +115,8 @@
   },
   "1.7.4": {
     "en": "Added debug output for latest crash report"
+  },
+  "1.7.5": {
+    "en": "myUplink has started to only return partial responses at times... probably due to high load. Instead of crashing the app will now just ignore the partial response and you will have to wait for another 5 minutes before you get the data."
   }
 }

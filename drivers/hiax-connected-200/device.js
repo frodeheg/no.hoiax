@@ -584,12 +584,14 @@ class MyHoiaxDevice extends OAuth2Device {
         }
       } // Else parameterId not set.... this is only the case when internet connection is bad
     }
-    if (logTotal === undefined && logTemp === undefined && logStored === undefined) {
+    if (logTotal === undefined || logTemp === undefined || logStored === undefined) {
       this.log('Invalid response');
       this.log(JSON.stringify(devPoints));
-      throw (new Error(`Sorry about the crash, send this to the developer: ${JSON.stringify(devPoints)}`));
+      // Should probably set device to unavailable but it's probably ok missing some values
+      // throw (new Error(`Sorry about the crash, send this to the developer: ${JSON.stringify(devPoints)}`));
+    } else {
+      this.logLeakage(logTotal, logTemp, logStored);
     }
-    this.logLeakage(logTotal, logTemp, logStored);
     this.setAvailable(); // In case it was set to unavailable
   }
 

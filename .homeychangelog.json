@@ -121,5 +121,8 @@
   },
   "1.7.6": {
     "en": "Added a check to make sure device communication errors at device initialization time does not affect the device availability"
+  },
+  "1.7.7": {
+    "en": "Made sure to keep the device in unavalable mode when myUplink is being troublesome"
   }
 }

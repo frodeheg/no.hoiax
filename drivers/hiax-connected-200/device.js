@@ -161,7 +161,7 @@ class MyHoiaxDevice extends OAuth2Device {
       // If device type has not been detected previously, detect it once and for all
       if (!this.deviceType) {
         let tankSize;
-        while (!tankSize) {
+        while (!Array.isArray(tankSize) && tankSize.length !== 1) {
           try {
             tankSize = await this.oAuth2Client.getDevicePoints(this.deviceId, keyMap.TankVolume);
           } catch (err) {
@@ -236,7 +236,7 @@ class MyHoiaxDevice extends OAuth2Device {
 
       // Fetch the heater mode in order to set it to Homey and check if myuplink is broken
       let heaterMode;
-      while (!heaterMode) {
+      while (!Array.isArray(heaterMode) && heaterMode.length !== 1) {
         try {
           heaterMode = await this.oAuth2Client.getDevicePoints(this.deviceId, '500');
         } catch (err) {

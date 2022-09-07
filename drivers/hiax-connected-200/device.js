@@ -151,204 +151,209 @@ class MyHoiaxDevice extends OAuth2Device {
    */
   async onOAuth2Init() {
     this.log('MyHoiaxDevice was initialized');
-    this.setUnavailable('Initializing device.');
-    this.deviceId = this.getData().deviceId;
-    this.intervalID = undefined;
-    this.initializeID = undefined;
-    this.deviceType = this.getStoreValue('deviceType');
+    try {
+      this.setUnavailable('Initializing device.');
+      this.deviceId = this.getData().deviceId;
+      this.intervalID = undefined;
+      this.initializeID = undefined;
+      this.deviceType = this.getStoreValue('deviceType');
 
-    // If device type has not been detected previously, detect it once and for all
-    if (!this.deviceType) {
-      let tankSize;
-      while (!tankSize) {
+      // If device type has not been detected previously, detect it once and for all
+      if (!this.deviceType) {
+        let tankSize;
+        while (!tankSize) {
+          try {
+            tankSize = await this.oAuth2Client.getDevicePoints(this.deviceId, keyMap.TankVolume);
+          } catch (err) {
+            tankSize = undefined;
+            this.setUnavailable(`Network problem: ${err}`);
+            await sleep(retryOnErrorWaitTime);
+          }
+        }
+        switch (parseInt(tankSize[0].value, 10)) {
+          case CONNECTED_200_PROPERTIES.size: this.deviceType = DEVICE_TYPE_CONNECTED_200; break;
+          case CONNECTED_300_PROPERTIES.size: this.deviceType = DEVICE_TYPE_CONNECTED_300; break;
+          default: this.deviceType = DEVICE_TYPE_UNKNOWN; break;
+        }
+        this.setStoreValue('deviceType', this.deviceType).catch(this.error);
+      }
+
+      // Capability update from version 1.3.3
+      if (!this.hasCapability('meter_power.leak_accum')) {
+        await this.addCapability('meter_power.leak_accum');
+      }
+      if (!this.hasCapability('measure_power.leak')) {
+        await this.addCapability('measure_power.leak');
+      }
+      if (!this.hasCapability('measure_humidity.leak_relation')) {
+        await this.addCapability('measure_humidity.leak_relation');
+      }
+
+      // Capability update from version 1.6.0
+      // In case the tank is Connected 300 the capability is wrong
+      if (this.hasCapability('max_power') && (this.deviceType === DEVICE_TYPE_CONNECTED_300)) {
+        this.log('Performing Connected 300 fix');
+        await this.removeCapability('max_power');
+        await this.addCapability('max_power_3000');
+      }
+
+      // As a consequence of version 1.6.0 the max_power capability is now device specific
+      if (this.hasCapability('max_power')) {
+        this.max_power_capability_name = 'max_power';
+        this.max_power_action_name = 'change-maxpower';
+      } else if (this.hasCapability('max_power_3000')) {
+        this.max_power_capability_name = 'max_power_3000';
+        this.max_power_action_name = 'change-maxpower-3000';
+      } else {
+        throw new Error('This device is broken, please delete it and reinstall it');
+      }
+
+      // Initial state for leakage heat
+      this.prevRelationTime = undefined;
+      this.prevRelationUse = undefined;
+      this.prevRelationLeak = undefined;
+      this.prevAccumTime = new Date(this.getStoreValue('prevAccumTime'));
+      this.accumulatedLeakage = this.getStoreValue('accumulatedLeakage');
+      if (!(this.prevAccumTime instanceof Date) || Number.isNaN(+this.prevAccumTime)) this.prevAccumTime = new Date();
+      if (!this.accumulatedLeakage) this.accumulatedLeakage = 0;
+      const deviceProperties = (this.deviceType === DEVICE_TYPE_CONNECTED_300) ? CONNECTED_300_PROPERTIES : CONNECTED_200_PROPERTIES;
+      this.leakageConstant = deviceProperties.leakage_constant; // Set it static here because those running debug versions have incorrect leakage
+      if (!this.leakageConstant) {
+        // In case the leakage constant has not been measured for a device, just scale a known one to have something until
+        // it is more accurate
+        this.leakageConstant = (CONNECTED_200_PROPERTIES.leakage_constant * deviceProperties.size) / CONNECTED_200_PROPERTIES.size;
+      }
+
+      // Defaults for values fetched from myUplink in case myUplink is unavailable
+      this.outsideTemp = 24; // Updated by a flow if set up
+      this.tankVolume = deviceProperties.size;
+      this.HeaterNomPower = deviceProperties.element1_power;
+      this.HeaterNomPower2 = deviceProperties.element2_power;
+
+      // === Debug code to show if new features has been added ===
+      // let all_features = await this.oAuth2Client.getDevicePoints(this.deviceId);
+      // this.log(JSON.stringify(all_features))
+
+      // Fetch the heater mode in order to set it to Homey and check if myuplink is broken
+      let heaterMode;
+      while (!heaterMode) {
         try {
-          tankSize = await this.oAuth2Client.getDevicePoints(this.deviceId, keyMap.TankVolume);
+          heaterMode = await this.oAuth2Client.getDevicePoints(this.deviceId, '500');
         } catch (err) {
-          tankSize = undefined;
+          heaterMode = undefined;
           this.setUnavailable(`Network problem: ${err}`);
           await sleep(retryOnErrorWaitTime);
         }
       }
-      switch (parseInt(tankSize[0].value, 10)) {
-        case CONNECTED_200_PROPERTIES.size: this.deviceType = DEVICE_TYPE_CONNECTED_200; break;
-        case CONNECTED_300_PROPERTIES.size: this.deviceType = DEVICE_TYPE_CONNECTED_300; break;
-        default: this.deviceType = DEVICE_TYPE_UNKNOWN; break;
+      if (!heaterMode[0]) {
+        // Given the while loop above this should not happen so throw error
+        throw new Error(`Problems reading heater mode: ${heaterMode.message}`);
       }
-      this.setStoreValue('deviceType', this.deviceType).catch(this.error);
-    }
-
-    // Capability update from version 1.3.3
-    if (!this.hasCapability('meter_power.leak_accum')) {
-      await this.addCapability('meter_power.leak_accum');
-    }
-    if (!this.hasCapability('measure_power.leak')) {
-      await this.addCapability('measure_power.leak');
-    }
-    if (!this.hasCapability('measure_humidity.leak_relation')) {
-      await this.addCapability('measure_humidity.leak_relation');
-    }
-
-    // Capability update from version 1.6.0
-    // In case the tank is Connected 300 the capability is wrong
-    if (this.hasCapability('max_power') && (this.deviceType === DEVICE_TYPE_CONNECTED_300)) {
-      this.log('Performing Connected 300 fix');
-      await this.removeCapability('max_power');
-      await this.addCapability('max_power_3000');
-    }
-
-    // As a consequence of version 1.6.0 the max_power capability is now device specific
-    if (this.hasCapability('max_power')) {
-      this.max_power_capability_name = 'max_power';
-      this.max_power_action_name = 'change-maxpower';
-    } else if (this.hasCapability('max_power_3000')) {
-      this.max_power_capability_name = 'max_power_3000';
-      this.max_power_action_name = 'change-maxpower-3000';
-    } else {
-      throw new Error('This device is broken, please delete it and reinstall it');
-    }
-
-    // Initial state for leakage heat
-    this.prevRelationTime = undefined;
-    this.prevRelationUse = undefined;
-    this.prevRelationLeak = undefined;
-    this.prevAccumTime = new Date(this.getStoreValue('prevAccumTime'));
-    this.accumulatedLeakage = this.getStoreValue('accumulatedLeakage');
-    if (!(this.prevAccumTime instanceof Date) || Number.isNaN(+this.prevAccumTime)) this.prevAccumTime = new Date();
-    if (!this.accumulatedLeakage) this.accumulatedLeakage = 0;
-    const deviceProperties = (this.deviceType === DEVICE_TYPE_CONNECTED_300) ? CONNECTED_300_PROPERTIES : CONNECTED_200_PROPERTIES;
-    this.leakageConstant = deviceProperties.leakage_constant; // Set it static here because those running debug versions have incorrect leakage
-    if (!this.leakageConstant) {
-      // In case the leakage constant has not been measured for a device, just scale a known one to have something until
-      // it is more accurate
-      this.leakageConstant = (CONNECTED_200_PROPERTIES.leakage_constant * deviceProperties.size) / CONNECTED_200_PROPERTIES.size;
-    }
-
-    // Defaults for values fetched from myUplink in case myUplink is unavailable
-    this.outsideTemp = 24; // Updated by a flow if set up
-    this.tankVolume = deviceProperties.size;
-    this.HeaterNomPower = deviceProperties.element1_power;
-    this.HeaterNomPower2 = deviceProperties.element2_power;
-
-    // === Debug code to show if new features has been added ===
-    // let all_features = await this.oAuth2Client.getDevicePoints(this.deviceId);
-    // this.log(JSON.stringify(all_features))
-
-    // Fetch the heater mode in order to set it to Homey and check if myuplink is broken
-    let heaterMode;
-    while (!heaterMode) {
-      try {
-        heaterMode = await this.oAuth2Client.getDevicePoints(this.deviceId, '500');
-      } catch (err) {
-        heaterMode = undefined;
-        this.setUnavailable(`Network problem: ${err}`);
-        await sleep(retryOnErrorWaitTime);
+      // Check if myUplink is broken. Apparently version 1.23 (2262) is
+      this.brokenSpotPrice = true;
+      for (let i = 0; i < heaterMode[0].enumValues.length; i++) {
+        if (heaterMode[0].enumValues[i].value === '6') {
+          this.brokenSpotPrice = false;
+        }
       }
-    }
-    if (!heaterMode[0]) {
-      // Given the while loop above this should not happen so throw error
-      throw new Error(`Problems reading heater mode: ${heaterMode.message}`);
-    }
-    // Check if myUplink is broken. Apparently version 1.23 (2262) is
-    this.brokenSpotPrice = true;
-    for (let i = 0; i < heaterMode[0].enumValues.length; i++) {
-      if (heaterMode[0].enumValues[i].value === '6') {
-        this.brokenSpotPrice = false;
+      if (this.brokenSpotPrice) {
+        this.log('The Spot Price setting seem to be broken and will be disabled');
       }
-    }
-    if (this.brokenSpotPrice) {
-      this.log('The Spot Price setting seem to be broken and will be disabled');
-    }
 
-    // Make sure that the Heater mode is controllable - set to External mode (but only if first time the app is run)
-    this.isFirstTime = this.getStoreValue('isFirstTime') === null;
-    if (this.isFirstTime) {
-      if (heaterMode[0].value !== '8') { // 8 == External
-        let res;
-        while (!res || res.ok === false) {
+      // Make sure that the Heater mode is controllable - set to External mode (but only if first time the app is run)
+      this.isFirstTime = this.getStoreValue('isFirstTime') === null;
+      if (this.isFirstTime) {
+        if (heaterMode[0].value !== '8') { // 8 == External
+          let res;
+          while (!res || res.ok === false) {
+            try {
+              res = await this.oAuth2Client.setDevicePoint(this.deviceId, { 500: '8' });
+            } catch (err) {
+              this.setUnavailable(`Network problem: ${err}`);
+              await sleep(retryOnErrorWaitTime);
+            }
+          }
+        }
+        this.isFirstTime = false;
+        this.setStoreValue('isFirstTime', this.isFirstTime).catch(this.error);
+      }
+
+      // Set heater max power to 2000 W
+      this.max_power = 3;
+      this.is_on = true;
+
+      // Prepare for reverse indexing of state entries
+      this.reverseKeyMap = {};
+      const keys = Object.keys(keyMap);
+      for (let keyNr = 0; keyNr < keys.length; keyNr++) {
+        this.reverseKeyMap[keyMap[keys[keyNr]]] = keys[keyNr];
+      }
+
+      // Update internal state
+      let statesLeft = Object.values(keyMap);
+      if (this.brokenSpotPrice) {
+        statesLeft = statesLeft.filter(value => +value < 544 || +value > 548);
+      }
+      await this.initializeInternalStates(statesLeft);
+
+      // Custom flows
+      const OnMaxPowerAction = this.homey.flow.getActionCard(this.max_power_action_name);
+
+      OnMaxPowerAction.registerRunListener(async state => {
+        await this.setHeaterState(
+          this.deviceId,
+          this.is_on,
+          (state['max_power'] === 'low_power') ? 1
+            : (state['max_power'] === 'medium_power') ? 2
+              : 3
+        );
+      });
+
+      const OnAmbientAction = this.homey.flow.getActionCard('change-ambient-temp');
+
+      OnAmbientAction.registerRunListener(async state => {
+        await this.setAmbientTemp(this.deviceId, state['ambient_temp']);
+      });
+
+      // Register on/off handling
+      this.registerCapabilityListener('onoff', async turnOn => {
+        await this.setHeaterState(this.deviceId, turnOn, this.max_power);
+      });
+
+      // Register ambient temperature handling (probably not required as the capability is hidden)
+      this.registerCapabilityListener('ambient_temp', async ambientTemp => {
+        await this.setAmbientTemp(this.deviceId, ambientTemp);
+      });
+
+      // Register max power handling
+      this.registerCapabilityListener(this.max_power_capability_name, async value => {
+        let newPower = 3; // High power
+        if (value === 'low_power') {
+          newPower = 1;
+        } else if (value === 'medium_power') {
+          newPower = 2;
+        }
+        await this.setHeaterState(this.deviceId, this.is_on, newPower);
+      });
+
+      // Register target temperature handling
+      this.registerCapabilityListener('target_temperature', async value => {
+        let targetTemp;
+        while (!targetTemp || targetTemp.ok === false) {
           try {
-            res = await this.oAuth2Client.setDevicePoint(this.deviceId, { 500: '8' });
+            targetTemp = await this.oAuth2Client.setDevicePoint(this.deviceId, { 527: value });
           } catch (err) {
             this.setUnavailable(`Network problem: ${err}`);
             await sleep(retryOnErrorWaitTime);
           }
         }
-      }
-      this.isFirstTime = false;
-      this.setStoreValue('isFirstTime', this.isFirstTime).catch(this.error);
+        this.setAvailable();
+        this.log('Target temp:', value);
+      });
+    } catch (err) {
+      // Safer to set device unavailable state than to throw the error. Reason being onOAuth2Deleted is not called if this throw errors
+      this.setUnavailable(`Unknown error, may need to reinstall device: ${err}`);
     }
-
-    // Set heater max power to 2000 W
-    this.max_power = 3;
-    this.is_on = true;
-
-    // Prepare for reverse indexing of state entries
-    this.reverseKeyMap = {};
-    const keys = Object.keys(keyMap);
-    for (let keyNr = 0; keyNr < keys.length; keyNr++) {
-      this.reverseKeyMap[keyMap[keys[keyNr]]] = keys[keyNr];
-    }
-
-    // Update internal state
-    let statesLeft = Object.values(keyMap);
-    if (this.brokenSpotPrice) {
-      statesLeft = statesLeft.filter(value => +value < 544 || +value > 548);
-    }
-    await this.initializeInternalStates(statesLeft);
-
-    // Custom flows
-    const OnMaxPowerAction = this.homey.flow.getActionCard(this.max_power_action_name);
-
-    OnMaxPowerAction.registerRunListener(async state => {
-      await this.setHeaterState(
-        this.deviceId,
-        this.is_on,
-        (state['max_power'] === 'low_power') ? 1
-          : (state['max_power'] === 'medium_power') ? 2
-            : 3
-      );
-    });
-
-    const OnAmbientAction = this.homey.flow.getActionCard('change-ambient-temp');
-
-    OnAmbientAction.registerRunListener(async state => {
-      await this.setAmbientTemp(this.deviceId, state['ambient_temp']);
-    });
-
-    // Register on/off handling
-    this.registerCapabilityListener('onoff', async turnOn => {
-      await this.setHeaterState(this.deviceId, turnOn, this.max_power);
-    });
-
-    // Register ambient temperature handling (probably not required as the capability is hidden)
-    this.registerCapabilityListener('ambient_temp', async ambientTemp => {
-      await this.setAmbientTemp(this.deviceId, ambientTemp);
-    });
-
-    // Register max power handling
-    this.registerCapabilityListener(this.max_power_capability_name, async value => {
-      let newPower = 3; // High power
-      if (value === 'low_power') {
-        newPower = 1;
-      } else if (value === 'medium_power') {
-        newPower = 2;
-      }
-      await this.setHeaterState(this.deviceId, this.is_on, newPower);
-    });
-
-    // Register target temperature handling
-    this.registerCapabilityListener('target_temperature', async value => {
-      let targetTemp;
-      while (!targetTemp || targetTemp.ok === false) {
-        try {
-          targetTemp = await this.oAuth2Client.setDevicePoint(this.deviceId, { 527: value });
-        } catch (err) {
-          this.setUnavailable(`Network problem: ${err}`);
-          await sleep(retryOnErrorWaitTime);
-        }
-      }
-      this.setAvailable();
-      this.log('Target temp:', value);
-    });
   }
 
   //

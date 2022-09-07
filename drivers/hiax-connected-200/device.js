@@ -597,7 +597,9 @@ class MyHoiaxDevice extends OAuth2Device {
     } else {
       this.logLeakage(logTotal, logTemp, logStored);
     }
-    this.setAvailable(); // In case it was set to unavailable
+    if (devPoints.length > 0) {
+      this.setAvailable(); // In case it was set to unavailable
+    }
   }
 
 }

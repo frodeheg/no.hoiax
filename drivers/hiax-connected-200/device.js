@@ -143,6 +143,7 @@ class MyHoiaxDevice extends OAuth2Device {
     toSetSettings.systemName = String(this.getData().systemName);
     toSetSettings.deviceId = String(this.getData().deviceId);
     toSetSettings.deviceName = String(this.getData().deviceName);
+    toSetSettings.firmwareVersion = String(toSetSettings.firmwareVersion);
     return super.setSettings(toSetSettings);
   }
 
@@ -380,7 +381,7 @@ class MyHoiaxDevice extends OAuth2Device {
       let stateRequest;
       try {
         stateRequest = await this.oAuth2Client.getDevicePoints(this.deviceId, stateToFetch);
-        this.log(`stateRequest: ${JSON.stringify(stateRequest)}`);
+        this.log(`State response: ${JSON.stringify(stateRequest)}`);
       } catch (innerErr) {
         throw new Error(`Network problem: ${innerErr}`);
       }
@@ -408,6 +409,11 @@ class MyHoiaxDevice extends OAuth2Device {
       }
       if (Object.keys(fetchedStates).length > 0) {
         try {
+          fetchedStates.firmwareVersion = 'unknown';
+          const firmwareResponse = await this.oAuth2Client.getDeviceInfo(this.deviceId);
+          if (firmwareResponse && ('firmware' in firmwareResponse) && ('currentFwVersion' in firmwareResponse.firmware)) {
+            fetchedStates.firmwareVersion = firmwareResponse.firmware.currentFwVersion;
+          }
           await this.toSettings(fetchedStates);
           statesLeft = statesLeft.filter(value => {
             return !(this.reverseKeyMap[value] in fetchedStates);

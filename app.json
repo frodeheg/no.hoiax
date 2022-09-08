@@ -661,6 +661,19 @@
               }
             },
             {
+              "id": "firmwareVersion",
+              "type": "label",
+              "label": {
+                "en": "Firmware Version",
+                "no": "Fastvareversjon"
+              },
+              "value": "???",
+              "hint": {
+                "en": "The Firmware version of the tank.",
+                "no": "Fastvareversjonen til tanken."
+              }
+            },
+            {
               "id": "HeaterNomPower",
               "type": "label",
               "label": {

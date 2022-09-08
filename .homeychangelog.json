@@ -130,5 +130,8 @@
   },
   "1.7.9": {
     "en": "Fixed problem as reported by rovand on github  (device unavailable after install)"
+  },
+  "1.7.10": {
+    "en": "Added firmware version to advanced settings readout"
   }
 }

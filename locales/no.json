@@ -1,5 +1,6 @@
 {
   "info": {
-    "sparegris": "Anbefaling: Installer appen Sparegris hvis du ønsker bedre kontroll på strømforbruket og effekttariffen."
+    "sparegris": "Anbefaling: Installer appen Sparegris hvis du ønsker bedre kontroll på strømforbruket og effekttariffen.",
+    "july20thBug": "Akkumulert varmetap i berederen har nå blitt resatt fordi den viste gal verdi. Vennligst se forumet for mer informasjon."
   }
 }

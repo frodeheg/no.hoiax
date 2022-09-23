@@ -190,6 +190,11 @@ class MyHoiaxDevice extends OAuth2Device {
         await this.addCapability('measure_humidity.leak_relation');
       }
 
+      // Capability update from version 1.7.11
+      if (!this.hasCapability('button.reset_leakage')) {
+        await this.addCapability('button.reset_leakage');
+      }
+
       // Capability update from version 1.6.0
       // In case the tank is Connected 300 the capability is wrong
       if (this.hasCapability('max_power') && (this.deviceType === DEVICE_TYPE_CONNECTED_300)) {
@@ -209,13 +214,28 @@ class MyHoiaxDevice extends OAuth2Device {
         throw new Error('This device is broken, please delete it and reinstall it');
       }
 
+      // A bug introduced on July 20th 2022 12:14 PM set the prevAccumTime incorrect and as such completely invalidate this.accumulatedLeakage
+      if (this.getStoreValue('prevAccumTime') === null) {
+        // New install so not affected by the bug
+        this.setStoreValue('July20thBugHandled', 1);
+        this.log('New install, ignore fix for July20thBug');
+      } else if (this.getStoreValue('July20thBugHandled') === null) {
+        const oldLeak = this.getStoreValue('accumulatedLeakage');
+        if ((oldLeak > 500) || (oldLeak < 0)) {
+          this.homey.notifications.createNotification({ excerpt: this.homey.__('info.july20thBug') });
+          this.setStoreValue('accumulatedLeakage', 0);
+        }
+        this.setStoreValue('July20thBugHandled', 1);
+        this.log('July20thBug handled');
+      }
+
       // Initial state for leakage heat
       this.prevRelationTime = undefined;
       this.prevRelationUse = undefined;
       this.prevRelationLeak = undefined;
       this.prevAccumTime = new Date(this.getStoreValue('prevAccumTime'));
       this.accumulatedLeakage = this.getStoreValue('accumulatedLeakage');
-      if (!(this.prevAccumTime instanceof Date) || Number.isNaN(+this.prevAccumTime)) this.prevAccumTime = new Date();
+      if (!(this.prevAccumTime instanceof Date) || this.getStoreValue('prevAccumTime') === null) this.prevAccumTime = new Date();
       if (!this.accumulatedLeakage) this.accumulatedLeakage = 0;
       const deviceProperties = (this.deviceType === DEVICE_TYPE_CONNECTED_300) ? CONNECTED_300_PROPERTIES : CONNECTED_200_PROPERTIES;
       this.leakageConstant = deviceProperties.leakage_constant; // Set it static here because those running debug versions have incorrect leakage
@@ -350,6 +370,12 @@ class MyHoiaxDevice extends OAuth2Device {
         }
         this.setAvailable();
         this.log('Target temp:', value);
+      });
+
+      // Register maintainance action to reset accumulater leakage heat
+      this.registerCapabilityListener('button.reset_leakage', async () => {
+        this.log('Accumulated leakage was reset');
+        this.setStoreValue('accumulatedLeakage', 0);
       });
     } catch (err) {
       // Safer to set device unavailable state than to throw the error. Reason being onOAuth2Deleted is not called if this throw errors

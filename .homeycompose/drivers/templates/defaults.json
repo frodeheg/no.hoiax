@@ -12,7 +12,8 @@
       "onoff",
       "measure_humidity.fill_level",
       "measure_humidity.leak_relation",
-      "ambient_temp"
+      "ambient_temp",
+      "button.reset_leakage"
     ],
     "capabilitiesOptions": {
       "meter_power.accumulated": {
@@ -54,6 +55,17 @@
         "title": {
           "en": "Energy leaked yesterday",
           "no": "Andel strømbruk tapt i går"
+        }
+      },
+      "button.reset_leakage": {
+        "maintenanceAction": true,
+        "title": {
+          "en": "Reset accumulated leakage",
+          "no": "Reset akkumulert lekasjevarme"
+        },
+        "desc": {
+          "en": "Reset the accumulated leakage heat (kWh), note that this can not be reversed.",
+          "no": "Reset den akkumulerte lekasjevarmen (kWh), vær oppmerksom på at dette ikke kan angres."
         }
       }
     },

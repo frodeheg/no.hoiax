@@ -4,6 +4,7 @@
     "subtitle": "Please log in"
   },
   "info": {
-    "sparegris": "Reccomendation: Install the app Piggy Bank if you want better control of your electricity consumption and power tariff"
+    "sparegris": "Reccomendation: Install the app Piggy Bank if you want better control of your electricity consumption and power tariff",
+    "july20thBug": "The accumulated leakage heat of the tank has now been reset because the displayed value was incorrect. Please refer to the forum for more information."
   }
 }

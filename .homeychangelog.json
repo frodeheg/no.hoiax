@@ -133,5 +133,8 @@
   },
   "1.7.10": {
     "en": "Added firmware version to advanced settings readout"
+  },
+  "1.7.11": {
+    "en": "Fixed accumulated leakage heat capability as reported by THN in the forum. + Added maintainance action to reset the accumulated leakage heat."
   }
 }

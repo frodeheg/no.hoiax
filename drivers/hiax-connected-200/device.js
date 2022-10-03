@@ -158,6 +158,7 @@ class MyHoiaxDevice extends OAuth2Device {
       this.intervalID = undefined;
       this.initializeID = undefined;
       this.deviceType = this.getStoreValue('deviceType');
+      this.killed = false;
 
       // If device type has not been detected previously, detect it once and for all
       if (!this.deviceType) {
@@ -385,6 +386,7 @@ class MyHoiaxDevice extends OAuth2Device {
 
   //
   async onOAuth2Deleted() {
+    this.killed = true;
     // Make sure the interval is cleared if it was started, otherwise it will continue to
     // trigger but on an unknown device.
     if (this.intervalID !== undefined) {
@@ -470,6 +472,7 @@ class MyHoiaxDevice extends OAuth2Device {
         // Retry this function again in a while
         this.log(`Retry these states in a while: ${JSON.stringify(statesLeft)}`);
         this.initializeID = setTimeout(() => {
+          if (this.killed) return;
           this.initializeInternalStates(statesLeft);
         }, retryOnErrorWaitTime);
       } else {
@@ -477,9 +480,11 @@ class MyHoiaxDevice extends OAuth2Device {
         try {
           await this.updateState(this.deviceId);
         } catch (err) {} // Do not care, the setInterval below wil refresh the state anyway
-        this.intervalID = setInterval(() => {
-          this.updateState(this.deviceId);
-        }, 1000 * 60 * 5);
+        if (!this.killed) { // In some rare case onOAuth2Deleted could have happened within this actual function
+          this.intervalID = setInterval(() => {
+            this.updateState(this.deviceId);
+          }, 1000 * 60 * 5);
+        }
         this.log('Device init complete');
         this.setAvailable();
       }

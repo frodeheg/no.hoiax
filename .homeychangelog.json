@@ -136,5 +136,8 @@
   },
   "1.7.11": {
     "en": "Fixed accumulated leakage heat capability as reported by THN in the forum. + Added maintainance action to reset the accumulated leakage heat."
+  },
+  "1.7.12": {
+    "en": "Attempted to fix a crash bug for zombie devices that was not shut down properly."
   }
 }

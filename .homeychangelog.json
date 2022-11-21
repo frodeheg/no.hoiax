@@ -139,5 +139,8 @@
   },
   "1.7.12": {
     "en": "Attempted to fix a crash bug for zombie devices that was not shut down properly."
+  },
+  "1.7.13": {
+    "en": "Fix for the missing authorization token (I think)"
   }
 }

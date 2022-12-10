@@ -7,6 +7,7 @@
 const { OAuth2Device } = require('homey-oauth2app');
 
 const retryOnErrorWaitTime = 10000; // ms
+const retryOnOkWaitTime = 5000; // ms
 
 // Device types
 const DEVICE_TYPE_CONNECTED_200 = 1;
@@ -73,6 +74,9 @@ class MyHoiaxDevice extends OAuth2Device {
     while (!onoffResponse || onoffResponse.ok === false) {
       try {
         onoffResponse = await this.oAuth2Client.setDevicePoint(deviceId, { 517: power });
+        if (!onoffResponse || onoffResponse.ok === false) {
+          await sleep(retryOnOkWaitTime);
+        }
       } catch (err) {
         this.setUnavailable(`Network problem: ${err}`);
         await sleep(retryOnErrorWaitTime);
@@ -111,6 +115,9 @@ class MyHoiaxDevice extends OAuth2Device {
     while (!response || response.ok === false) {
       try {
         response = await this.oAuth2Client.setDevicePoint(deviceId, keyChange);
+        if (!response || response.ok === false) {
+          await sleep(retryOnOkWaitTime);
+        }
       } catch (err) {
         this.setUnavailable(`Network problem: ${err}`);
         await sleep(retryOnErrorWaitTime);
@@ -166,6 +173,9 @@ class MyHoiaxDevice extends OAuth2Device {
         while (!Array.isArray(tankSize) || tankSize.length !== 1) {
           try {
             tankSize = await this.oAuth2Client.getDevicePoints(this.deviceId, keyMap.TankVolume);
+            if (!Array.isArray(tankSize) || tankSize.length !== 1) {
+              await sleep(retryOnOkWaitTime);
+            }
           } catch (err) {
             tankSize = undefined;
             this.setUnavailable(`Network problem: ${err}`);
@@ -261,6 +271,9 @@ class MyHoiaxDevice extends OAuth2Device {
       while (!Array.isArray(heaterMode) || heaterMode.length !== 1) {
         try {
           heaterMode = await this.oAuth2Client.getDevicePoints(this.deviceId, '500');
+          if (!Array.isArray(heaterMode) || heaterMode.length !== 1) {
+            await sleep(retryOnOkWaitTime);
+          }
         } catch (err) {
           heaterMode = undefined;
           this.setUnavailable(`Network problem: ${err}`);
@@ -290,6 +303,9 @@ class MyHoiaxDevice extends OAuth2Device {
           while (!res || res.ok === false) {
             try {
               res = await this.oAuth2Client.setDevicePoint(this.deviceId, { 500: '8' });
+              if (!res || res.ok === false) {
+                await sleep(retryOnOkWaitTime);
+              }
             } catch (err) {
               this.setUnavailable(`Network problem: ${err}`);
               await sleep(retryOnErrorWaitTime);
@@ -364,6 +380,9 @@ class MyHoiaxDevice extends OAuth2Device {
         while (!targetTemp || targetTemp.ok === false) {
           try {
             targetTemp = await this.oAuth2Client.setDevicePoint(this.deviceId, { 527: value });
+            if (!targetTemp || targetTemp.ok === false) {
+              await sleep(retryOnOkWaitTime);
+            }
           } catch (err) {
             this.setUnavailable(`Network problem: ${err}`);
             await sleep(retryOnErrorWaitTime);
@@ -557,6 +576,9 @@ class MyHoiaxDevice extends OAuth2Device {
       while (!response || response.ok === false) {
         try {
           response = await this.oAuth2Client.setDevicePoint(this.deviceId, keyChange);
+          if (!response || response.ok === false) {
+            await sleep(retryOnOkWaitTime);
+          }
         } catch (err) {
           this.setUnavailable(`Network problem: ${err}`);
           await sleep(retryOnErrorWaitTime);
@@ -571,6 +593,9 @@ class MyHoiaxDevice extends OAuth2Device {
     while (!devPoints) {
       try {
         devPoints = await this.oAuth2Client.getDevicePoints(deviceId, '302,303,400,404,517,527,528');
+        if (!devPoints) {
+          await sleep(retryOnOkWaitTime);
+        }
       } catch (err) {
         this.setUnavailable(`Network problem: ${err}`);
         await sleep(retryOnErrorWaitTime);

@@ -151,5 +151,8 @@
   },
   "1.7.16": {
     "en": "The previous bugfix did not catch the errors from the myuplink Api properly"
+  },
+  "1.7.17": {
+    "en": "Additional improvement to reduce load on myUplink server. + Removed decimal point for target temperature, apparently this didn't work."
   }
 }

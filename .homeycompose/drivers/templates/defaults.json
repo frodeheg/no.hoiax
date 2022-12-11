@@ -41,7 +41,7 @@
         }
       },
       "target_temperature": {
-        "step": 0.5,
+        "step": 1,
         "min": 20,
         "max": 85
       },

@@ -72,7 +72,7 @@ class MyHoiaxDevice extends OAuth2Device {
     const power = turnOn ? newPower : 0;
     return this.oAuth2Client.setDevicePoint(deviceId, { 517: power })
       .then(onoffResponse => {
-        if (onoffResponse && onoffResponse.ok) {
+        if (onoffResponse) {
           this.setAvailable(); // In case it was set to unavailable
         }
         // 2) Set capability states
@@ -101,8 +101,9 @@ class MyHoiaxDevice extends OAuth2Device {
         return Promise.resolve();
       })
       .catch(err => {
-        this.setUnavailable(err);
-        return Promise.reject(err);
+        const newErr = `myUplink error: ${err}`;
+        this.setUnavailable(newErr);
+        return Promise.reject(newErr);
       });
   }
 
@@ -117,7 +118,7 @@ class MyHoiaxDevice extends OAuth2Device {
     keyChange[keyMap['ambient_temperature']] = this.outsideTemp;
     return this.oAuth2Client.setDevicePoint(deviceId, keyChange)
       .then(response => {
-        if (response && response.ok) {
+        if (response) {
           this.setAvailable(); // In case it was set to unavailable
         }
         return Promise.resolve();
@@ -304,7 +305,11 @@ class MyHoiaxDevice extends OAuth2Device {
         if (heaterMode[0].value !== '8') { // 8 == External
           await this.oAuth2Client.setDevicePoint(this.deviceId, { 500: '8' })
             .then(response => {
-              available = response && response.ok;
+              if (response) {
+                available = true;
+              } else {
+                available = false;
+              }
             })
             .catch(err => {
               available = false;
@@ -337,7 +342,7 @@ class MyHoiaxDevice extends OAuth2Device {
       const OnMaxPowerAction = this.homey.flow.getActionCard(this.max_power_action_name);
 
       OnMaxPowerAction.registerRunListener(async state => {
-        await this.setHeaterState(
+        return this.setHeaterState(
           this.deviceId,
           this.is_on,
           (state['max_power'] === 'low_power') ? 1
@@ -354,7 +359,7 @@ class MyHoiaxDevice extends OAuth2Device {
 
       // Register on/off handling
       this.registerCapabilityListener('onoff', async turnOn => {
-        await this.setHeaterState(this.deviceId, turnOn, this.max_power);
+        return this.setHeaterState(this.deviceId, turnOn, this.max_power);
       });
 
       // Register ambient temperature handling (probably not required as the capability is hidden)
@@ -370,7 +375,7 @@ class MyHoiaxDevice extends OAuth2Device {
         } else if (value === 'medium_power') {
           newPower = 2;
         }
-        await this.setHeaterState(this.deviceId, this.is_on, newPower);
+        return this.setHeaterState(this.deviceId, this.is_on, newPower);
       });
 
       // Register target temperature handling
@@ -378,7 +383,7 @@ class MyHoiaxDevice extends OAuth2Device {
         this.log('Set target temp:', value);
         return this.oAuth2Client.setDevicePoint(this.deviceId, { 527: value })
           .then(response => {
-            if (response && response.ok) {
+            if (response) {
               this.setAvailable(); // In case it was set to unavailable
             }
             return Promise.resolve();
@@ -588,7 +593,7 @@ class MyHoiaxDevice extends OAuth2Device {
     if (Object.keys(keyChange).length > 0) {
       return this.oAuth2Client.setDevicePoint(this.deviceId, keyChange)
         .then(response => {
-          if (response && response.ok) {
+          if (response) {
             this.setAvailable(); // In case it was set to unavailable
           }
           return Promise.resolve();
@@ -611,6 +616,7 @@ class MyHoiaxDevice extends OAuth2Device {
         let logTotal;
         let logTemp;
         let logStored;
+        const promises = [];
         for (let loop = 0; loop < devPoints.length; loop++) {
           if ('parameterId' in devPoints[loop] && 'value' in devPoints[loop]) {
             switch (parseInt(devPoints[loop].parameterId, 10)) {
@@ -618,18 +624,18 @@ class MyHoiaxDevice extends OAuth2Device {
                 // this.setCapabilityValue('measure_humidity.efficiency', devPoints[loop].value)
                 break;
               case 302: // 302 = EnergyStored
-                this.setCapabilityValue('meter_power.in_tank', devPoints[loop].value);
+                promises.push(this.setCapabilityValue('meter_power.in_tank', devPoints[loop].value));
                 logStored = devPoints[loop].value;
                 break;
               case 303: // 303 = EnergyTotal
-                this.setCapabilityValue('meter_power.accumulated', devPoints[loop].value);
+                promises.push(this.setCapabilityValue('meter_power.accumulated', devPoints[loop].value));
                 logTotal = devPoints[loop].value;
                 break;
               case 400: // 400 = EstimatedPower
-                this.setCapabilityValue('measure_power', devPoints[loop].value);
+                promises.push(this.setCapabilityValue('measure_power', devPoints[loop].value));
                 break;
               case 404: // 404 = FillLevel
-                this.setCapabilityValue('measure_humidity.fill_level', devPoints[loop].value);
+                promises.push(this.setCapabilityValue('measure_humidity.fill_level', devPoints[loop].value));
                 break;
               case 517: // 517 = Requested power
                 {
@@ -642,19 +648,23 @@ class MyHoiaxDevice extends OAuth2Device {
                     this.is_on = true;
                     this.max_power = currentMaxPower;
                   }
-                  this.setHeaterState(deviceId, this.is_on, this.max_power);
+                  promises.push(this.setHeaterState(deviceId, this.is_on, this.max_power));
                 }
                 break;
               case 527: // 527 = Requested temperature
-                this.setCapabilityValue('target_temperature', devPoints[loop].value);
+                promises.push(this.setCapabilityValue('target_temperature', devPoints[loop].value));
                 break;
               case 528: // 528 = Measured temperature
-                this.setCapabilityValue('measure_temperature', devPoints[loop].value);
+                promises.push(this.setCapabilityValue('measure_temperature', devPoints[loop].value));
                 logTemp = devPoints[loop].value;
                 break;
               default:
-                this.log(`Device point parameterId ${String(devPoints[loop].parameterId)} not handled`);
+              {
+                const newErr = new Error(`Device point parameterId ${String(devPoints[loop].parameterId)} not handled`);
+                promises.push(Promise.reject(newErr));
+                this.log(newErr);
                 break;
+              }
             }
           } // Else parameterId not set.... this is only the case when internet connection is bad
         }
@@ -666,15 +676,18 @@ class MyHoiaxDevice extends OAuth2Device {
         } else {
           this.logLeakage(logTotal, logTemp, logStored);
         }
-        if (devPoints.length > 0) {
-          this.setAvailable(); // In case it was set to unavailable
-        }
 
-        // Retry pending state from earlier
-        if (Object.keys(this.oAuth2Client.pendingDevicePoints).length > 0) {
-          return this.oAuth2Client.setDevicePoint(deviceId, this.oAuth2Client.pendingDevicePoints);
-        }
-        return Promise.resolve({ ok: true });
+        return Promise.all(promises)
+          .then(() => {
+            if (devPoints.length > 0) {
+              this.setAvailable(); // In case it was set to unavailable
+            }
+            // Retry pending state from earlier
+            if (Object.keys(this.oAuth2Client.pendingDevicePoints).length > 0) {
+              promises.push(this.oAuth2Client.setDevicePoint(deviceId, this.oAuth2Client.pendingDevicePoints));
+            }
+          })
+          .then(() => Promise.resolve({ ok: true }));
       })
       .then(response => {
         if (response && response.ok) {
@@ -683,8 +696,9 @@ class MyHoiaxDevice extends OAuth2Device {
         return Promise.resolve();
       })
       .catch(err => {
-        this.setUnavailable(`Network problem: ${err}`);
-        return Promise.reject(err);
+        const newErr = new Error(`Network problem: ${err}`);
+        this.setUnavailable(newErr);
+        return Promise.reject(newErr);
       });
   }
 

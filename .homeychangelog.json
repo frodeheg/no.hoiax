@@ -148,5 +148,8 @@
   },
   "1.7.15": {
     "en": "Significant improvement in how often myUplink is signalled in case of error situations. Should remove issues for tanks stuck in endless unchanging states."
+  },
+  "1.7.16": {
+    "en": "The previous bugfix did not catch the errors from the myuplink Api properly"
   }
 }

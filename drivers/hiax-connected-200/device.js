@@ -497,13 +497,26 @@ class MyHoiaxDevice extends OAuth2Device {
         }, retryOnErrorWaitTime);
       } else {
         // Device finally ok, update internal state every 5 minute:
-        try {
-          await this.updateState(this.deviceId);
-        } catch (err) {} // Do not care, the setInterval below wil refresh the state anyway
+        this.updateStateCounter = 0;
+        this.errCnt = 0;
+        await this.updateState(this.deviceId)
+          .catch(err => {}); // Do not care, the setInterval below wil refresh the state anyway
         if (!this.killed) { // In some rare case onOAuth2Deleted could have happened within this actual function
           this.intervalID = setInterval(() => {
-            this.updateState(this.deviceId);
-          }, 1000 * 60 * 5);
+            if (this.updateStateCounter <= 0) {
+              this.updateState(this.deviceId)
+                .then(() => {
+                  this.updateStateCounter = 4; // Wait 5 minutes to update normally
+                  this.errCnt = 0;
+                })
+                .catch(err => {
+                  this.updateStateCounter = Math.min(this.errCnt, 4); // Wait 1-5 minutes to update on error
+                  this.errCnt += 1;
+                });
+            } else {
+              this.updateStateCounter--;
+            }
+          }, 1000 * 60 * 1);
         }
         this.log('Device init complete');
         this.setAvailable();

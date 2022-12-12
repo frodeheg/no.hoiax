@@ -157,5 +157,8 @@
   },
   "1.7.18": {
     "en": "Removed small crash introduced by previous version (was never live)"
+  },
+  "1.7.19": {
+    "en": "Added some debug to find out where the crash bug comes from."
   }
 }

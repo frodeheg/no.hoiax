@@ -160,5 +160,8 @@
   },
   "1.7.19": {
     "en": "Added some debug to find out where the crash bug comes from."
+  },
+  "1.7.20": {
+    "en": "Added more debug"
   }
 }

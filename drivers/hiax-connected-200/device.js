@@ -607,7 +607,13 @@ class MyHoiaxDevice extends OAuth2Device {
   }
 
   async updateState(deviceId) {
-    return this.oAuth2Client.getDevicePoints(deviceId, '302,303,400,404,517,527,528')
+    return Promise.resolve()
+      .then(() => {
+        const needKeys = [302, 303, 400, 404, 517, 527, 528];
+        const pendingKeys = Object.keys(this.oAuth2Client.pendingDevicePoints).map(Number).filter(number => !needKeys.includes(number));
+        needKeys.push(...pendingKeys);
+        return this.oAuth2Client.getDevicePoints(deviceId, needKeys.join(','));
+      })
       .then(devPoints => {
         if (!Array.isArray(devPoints)) {
           return Promise.reject(new Error('Invalid state from myUplink'));
@@ -620,6 +626,9 @@ class MyHoiaxDevice extends OAuth2Device {
         for (let loop = 0; loop < devPoints.length; loop++) {
           if ('parameterId' in devPoints[loop] && 'value' in devPoints[loop]) {
             switch (parseInt(devPoints[loop].parameterId, 10)) {
+              case 100:
+                this.outsideTemp = devPoints[loop].value;
+                break;
               case 405: // 405 = HeaterEfficiency (deprecated)
                 // this.setCapabilityValue('measure_humidity.efficiency', devPoints[loop].value)
                 break;
@@ -661,8 +670,8 @@ class MyHoiaxDevice extends OAuth2Device {
               default:
               {
                 const newErr = new Error(`Device point parameterId ${String(devPoints[loop].parameterId)} not handled`);
-                promises.push(Promise.reject(newErr));
                 this.log(newErr);
+                promises.push(Promise.resolve()); // Do not reject even thoug additional handlig would be nice
                 break;
               }
             }

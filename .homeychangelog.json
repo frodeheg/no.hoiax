@@ -154,5 +154,8 @@
   },
   "1.7.17": {
     "en": "Additional improvement to reduce load on myUplink server. + Removed decimal point for target temperature, apparently this didn't work."
+  },
+  "1.7.18": {
+    "en": "Removed small crash introduced by previous version (was never live)"
   }
 }

@@ -693,8 +693,9 @@ class MyHoiaxDevice extends OAuth2Device {
             }
             // Retry pending state from earlier
             if (Object.keys(this.oAuth2Client.pendingDevicePoints).length > 0) {
-              promises.push(this.oAuth2Client.setDevicePoint(deviceId, this.oAuth2Client.pendingDevicePoints));
+              return this.oAuth2Client.setDevicePoint(deviceId, this.oAuth2Client.pendingDevicePoints);
             }
+            return Promise.resolve();
           })
           .then(() => Promise.resolve({ ok: true }));
       })

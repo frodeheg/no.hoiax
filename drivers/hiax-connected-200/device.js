@@ -124,7 +124,7 @@ class MyHoiaxDevice extends OAuth2Device {
         return Promise.resolve();
       })
       .catch(err => {
-        this.setUnavailable(`Network problem: ${err}`);
+        this.setUnavailable(`Network problem: ${err.message}`);
         return Promise.reject(err);
       });
   }
@@ -182,7 +182,7 @@ class MyHoiaxDevice extends OAuth2Device {
             }
           } catch (err) {
             tankSize = undefined;
-            this.setUnavailable(`Network problem: ${err}`);
+            this.setUnavailable(`Network problem: ${err.message}`);
             await sleep(retryOnErrorWaitTime);
           }
         }
@@ -280,7 +280,7 @@ class MyHoiaxDevice extends OAuth2Device {
           }
         } catch (err) {
           heaterMode = undefined;
-          this.setUnavailable(`Network problem: ${err}`);
+          this.setUnavailable(`Network problem: ${err.message}`);
           await sleep(retryOnErrorWaitTime);
         }
       }
@@ -313,7 +313,7 @@ class MyHoiaxDevice extends OAuth2Device {
             })
             .catch(err => {
               available = false;
-              this.setUnavailable(`Network problem: ${err}`);
+              this.setUnavailable(`Network problem: ${err.message}`);
             });
         }
         this.isFirstTime = false;
@@ -389,7 +389,7 @@ class MyHoiaxDevice extends OAuth2Device {
             return Promise.resolve();
           })
           .catch(err => {
-            this.setUnavailable(`Network problem: ${err}`);
+            this.setUnavailable(`Network problem: ${err.message}`);
             return Promise.reject(err);
           });
       });
@@ -436,7 +436,7 @@ class MyHoiaxDevice extends OAuth2Device {
         stateRequest = await this.oAuth2Client.getDevicePoints(this.deviceId, stateToFetch);
         this.log(`State response: ${JSON.stringify(stateRequest)}`);
       } catch (innerErr) {
-        throw new Error(`Network problem: ${innerErr}`);
+        throw new Error(`Network problem: ${innerErr.message}`);
       }
 
       const fetchedStates = {};
@@ -599,7 +599,7 @@ class MyHoiaxDevice extends OAuth2Device {
           return Promise.resolve();
         })
         .catch(err => {
-          this.setUnavailable(`Network problem: ${err}`);
+          this.setUnavailable(`Network problem: ${err.message}`);
           return Promise.reject(err);
         });
     }
@@ -706,7 +706,7 @@ class MyHoiaxDevice extends OAuth2Device {
         return Promise.resolve();
       })
       .catch(err => {
-        const newErr = new Error(`Network problem: ${err}`);
+        const newErr = new Error(`Network problem: ${err.message}`);
         this.setUnavailable(newErr);
         return Promise.reject(newErr);
       });

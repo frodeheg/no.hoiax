@@ -163,5 +163,8 @@
   },
   "1.7.20": {
     "en": "Added more debug"
+  },
+  "1.7.21": {
+    "en": "Improved the message when a device is unavailable."
   }
 }

@@ -111,6 +111,9 @@ class MyHoiaxDevice extends OAuth2Device {
     if ((Number.isNaN(+ambientTemp)) || (this.outsideTemp === ambientTemp)) {
       return Promise.resolve();
     }
+    // Apply clamp to avoid myUplink errors
+    if (ambientTemp < 10) ambientTemp = 10;
+    if (ambientTemp > 35) ambientTemp = 35;
     // this.log("New ambient temperature:" + String(ambientTemp))
     this.setSettings({ ambient_temperature: ambientTemp });
     this.outsideTemp = ambientTemp;

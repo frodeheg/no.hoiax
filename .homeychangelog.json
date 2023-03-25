@@ -166,5 +166,8 @@
   },
   "1.7.21": {
     "en": "Improved the message when a device is unavailable."
+  },
+  "1.7.22": {
+    "en": "Added clamp on the ambient temperature to avoid crashing the app when the temperature is outisde of myUplinks limits."
   }
 }

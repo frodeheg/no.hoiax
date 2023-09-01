@@ -111,6 +111,7 @@ class MyHoiaxDevice extends OAuth2Device {
     if ((Number.isNaN(+ambientTemp)) || (this.outsideTemp === ambientTemp)) {
       return Promise.resolve();
     }
+    ambientTemp = Math.round(+ambientTemp);
     // Apply clamp to avoid myUplink errors
     if (ambientTemp < 10) ambientTemp = 10;
     if (ambientTemp > 35) ambientTemp = 35;

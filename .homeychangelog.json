@@ -169,5 +169,8 @@
   },
   "1.7.22": {
     "en": "Added clamp on the ambient temperature to avoid crashing the app when the temperature is outisde of myUplinks limits."
+  },
+  "1.7.23": {
+    "en": "Added rounding on ambient temperature as myUplink no longer does this by itself"
   }
 }
